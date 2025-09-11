@@ -1,4 +1,4 @@
-import React from 'react'
+import {useEffect, useState} from 'react' //username is menjen adatbázisba
 
 function App() {
 
@@ -8,9 +8,10 @@ function App() {
         answer: string;
     }
 
-    const [createdquietions, setCreatedQuestions] = React.useState<Question[]>([]);
+    const [createdquietions, setCreatedQuestions] = useState<Question[]>([]);
+    const [code, setCode] = useState<string>('');
 
-    React.useEffect(() => {
+    useEffect(() => {
         console.log("Created Questions:", createdquietions);
     }, [createdquietions]);
 
@@ -25,8 +26,7 @@ function App() {
             alert("Please add at least one question before saving.");
             return;
         }
-        const codeInput = document.getElementById('code') as HTMLInputElement;
-        if (!codeInput || !codeInput.value) {
+        if (code == "") {
             alert("Please enter a room code.");
             return;
         }
@@ -36,10 +36,10 @@ function App() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ createdquietions, code: codeInput.value }),
+            body: JSON.stringify({ array: createdquietions, code: code }),
         })
         .then(async response => {
-            const text = await response.text(); // read the full response
+            const text = await response.text();
             if (!response.ok) {
                 throw new Error(text || 'Network response was not ok');
             } else {
@@ -99,8 +99,8 @@ function App() {
             </div>
         </form>
         <div className='container mx-auto p-4 border rounded mb-4 flex flex-col gap-2 justify-cenezr items-center w-[95vw] lg:w-[20vw]'>
-        <input className='bg-gray-100 border-gray-300 rounded-sm border border-solid p-1 text-center' type="text" id='code' placeholder='Room code'/>
-        <button className='bg-green-500 p-3 rounded-lg text-white' onClick={handleSaveQuiz}>Save Quiz</button>
+            <input className='bg-gray-100 border-gray-300 rounded-sm border border-solid p-1 text-center' type="text" placeholder='Room code' value={code} onChange={(e) => setCode(e.target.value)}/>
+            <button className='bg-green-500 p-3 rounded-lg text-white' onClick={handleSaveQuiz}>Save Quiz</button>
         </div>
     </>
   )
