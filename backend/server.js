@@ -33,7 +33,7 @@ app.post('/api/saveQuiz', (req, res) => {
   // }
 
   const query1 = 'Select * from quizzes where code = ?'
-  con.query(query1, [code], (err, results) => {
+  con.query(query1, code, (err, results) => {
     if (err) {
       return res.status(500).send('Error checking quiz code')
     }
@@ -55,6 +55,30 @@ app.post('/api/saveQuiz', (req, res) => {
           }
         })
       })
+    }
+  })
+})
+
+app.post('/api/getQuiz', (req, res) => {
+  const { code } = req.body
+  
+  if (!code) {
+    return res.status(400).send('Invalid input')
+  }
+  const query = 'SELECT * FROM quizzes WHERE code = ?'
+  con.query(query, [code], (err, results) => {
+    if (err) {
+      return res.status(500).send('Error retrieving quiz')
+    }
+    if (results.length === 0) {
+      return res.status(404).send('Quiz not found')
+    } else {
+      const quiz = results.map(row => ({
+        question: row.question,
+        options: JSON.parse(row.options),
+        answer: row.answer
+      }))
+      return res.status(200).json(quiz)
     }
   })
 })
