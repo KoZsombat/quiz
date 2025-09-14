@@ -6,7 +6,7 @@ import Login from './login.tsx'
 import Home from './home.tsx'
 import Create from './Create.tsx'
 import Host from './host.tsx'
-//dashboard, eredmeny hirdetes, admin/broadcast felulet, csak akkor lehessen csatlakozni ha el van indítva
+//dashboard, admin/broadcast felulet, quizId a host altal krealt kod legyen
 import './tailwind.css'
 
 createRoot(document.getElementById('root')!).render(

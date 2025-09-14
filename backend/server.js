@@ -3,8 +3,12 @@ import mysql  from 'mysql2';
 import bcrypt from 'bcrypt';
 import {body, validationResult} from 'express-validator';
 import express from 'express';
+import http from "http";
+import { Server } from "socket.io";
+import quizSocketHandler from "./quiz.js"; 
 
 const app = express(); 
+const server = http.createServer(app);
 
 const port = 3000
 
@@ -29,7 +33,13 @@ app.use(cors({
   origin: '*',
   methods: ['GET', 'POST'],
 }))
+const io = new Server(server, {
+  origin: "*",
+  methods: ["GET", "POST"],
+});
 app.use(express.json())
+
+quizSocketHandler(io); // Import the quizSocketHandler and pass the io instance
 
 async function hashPassword(plainPassword) {
   const hashed = await bcrypt.hash(plainPassword, saltRounds);
@@ -119,11 +129,13 @@ app.post('/api/login', async (req, res) => {
 });
 
 app.post('/api/saveQuiz', (req, res) => {
-  const { array, code } = req.body
+  const { array, code, author, visibility } = req.body
 
   // if (!array.question || !array.options || !Array.isArray(array.options) || !array.answer || !code) {
   //   return res.status(400).send('Invalid input');
   // }
+
+  const isPublic = visibility === "public" ? 1 : 0;
 
   const query1 = 'Select * from quizzes where code = ?'
   con.query(query1, code, (err, results) => {
@@ -133,10 +145,10 @@ app.post('/api/saveQuiz', (req, res) => {
     if (results.length > 0) {
       return res.status(400).send('Quiz with this code already exists')
     } else {
-      const query2 = 'INSERT INTO quizzes (code, question, options, answer) VALUES (?, ?, ?, ?)'
+      const query2 = 'INSERT INTO quizzes (code, author, isPublic, question, options, answer) VALUES (?, ?, ?, ?, ?, ?)'
       let completed = 0
       array.map(q => {
-        const params = [code, q.question, JSON.stringify(q.options), q.answer]
+        const params = [code, author, isPublic, q.question, JSON.stringify(q.options), q.answer]
         con.query(query2, params, (err, result) => {
           if (err) {
             res.status(500).send('Error saving quiz')
@@ -148,6 +160,43 @@ app.post('/api/saveQuiz', (req, res) => {
           }
         })
       })
+    }
+  })
+})
+
+// db rewrite 
+// JSON_ARRAYAGG(
+//   JSON_OBJECT(
+//     'question', question,
+//     'options', JSON_ARRAYAGG(JSON_EXTRACT(options, '$')),
+//     'answer', answer
+//   )
+// ) AS questions
+
+app.post('/api/getQuizzes', (req, res) => {
+  const { author } = req.body
+  
+  if (!author) {
+    return res.status(400).send('Invalid input')
+  }
+
+  const query = 'SELECT * FROM quizzes WHERE author = ? OR isPublic = 1'
+  con.query(query, [author], (err, results) => {
+    if (err) {
+      return res.status(500).send('Error retrieving quizzes')
+    }
+    if (results.length === 0) {
+      return res.status(404).send('No quizzes found')
+    } else {
+      const quizzes = results.map(row => ({
+        code: row.code,
+        author: row.author,
+        visibility: row.isPublic ? 'public' : 'private',
+        question: row.question,
+        options: JSON.parse(row.options),
+        answer: row.answer
+      }))
+      return res.status(200).json({ success: true, quizzes })
     }
   })
 })
@@ -176,6 +225,6 @@ app.post('/api/getQuiz', (req, res) => {
   })
 })
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server running`)
 })

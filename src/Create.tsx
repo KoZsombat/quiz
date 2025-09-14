@@ -1,6 +1,8 @@
-import {useEffect, useState} from 'react' //username is menjen adatbázisba
+import {useEffect, useState} from 'react'
+import useCheckLogin from './scripts/useCheckLogin';
 
 function App() {
+    const { username } = useCheckLogin();
 
     type Question = {
         question: string;
@@ -10,6 +12,7 @@ function App() {
 
     const [createdquietions, setCreatedQuestions] = useState<Question[]>([]);
     const [code, setCode] = useState<string>('');
+    const [visibility, setVisibility] = useState<"public" | "private">("public");
 
     useEffect(() => {
         console.log("Created Questions:", createdquietions);
@@ -36,7 +39,7 @@ function App() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ array: createdquietions, code: code }),
+            body: JSON.stringify({ array: createdquietions, code: code, author: username, visibility: visibility}),
         })
         .then(async response => {
             const text = await response.text();
@@ -99,7 +102,14 @@ function App() {
             </div>
         </form>
         <div className='container mx-auto p-4 border rounded mb-4 flex flex-col gap-2 justify-cenezr items-center w-[95vw] lg:w-[20vw]'>
-            <input className='bg-gray-100 border-gray-300 rounded-sm border border-solid p-1 text-center' type="text" placeholder='Room code' value={code} onChange={(e) => setCode(e.target.value)}/>
+            <input className='bg-gray-100 border-gray-300 rounded-sm border border-solid p-1 text-center w-full' type="text" placeholder='Room name' value={code} onChange={(e) => setCode(e.target.value)}/>
+            <div className='bg-gray-100 border-gray-300 rounded-sm border border-solid p-1 text-center text-gray-500 flex justify-center items-center gap-2 w-full'>
+                <label htmlFor="public">Visibility:</label>
+                <select value={visibility} onChange={(e) => setVisibility(e.target.value as "public" | "private")} className='w-17' name="public" id="public">
+                    <option value="public">Public</option>
+                    <option value="private">Private</option>
+                </select>
+            </div>
             <button className='bg-green-500 p-3 rounded-lg text-white' onClick={handleSaveQuiz}>Save Quiz</button>
         </div>
     </>
