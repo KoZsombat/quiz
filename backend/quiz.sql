@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: 127.0.0.1
--- Létrehozás ideje: 2025. Sze 02. 21:07
+-- Létrehozás ideje: 2025. Sze 16. 20:22
 -- Kiszolgáló verziója: 10.4.32-MariaDB
 -- PHP verzió: 8.2.12
 
@@ -20,8 +20,17 @@ SET time_zone = "+00:00";
 --
 -- Adatbázis: `quiz`
 --
-CREATE DATABASE IF NOT EXISTS `quiz` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `quiz`;
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `active`
+--
+
+CREATE TABLE `active` (
+  `q_code` varchar(255) NOT NULL,
+  `q_url` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -31,10 +40,45 @@ USE `quiz`;
 
 CREATE TABLE `quizzes` (
   `code` varchar(255) NOT NULL,
+  `author` varchar(255) NOT NULL,
+  `isPublic` tinyint(1) NOT NULL,
   `question` varchar(255) NOT NULL,
   `options` varchar(255) NOT NULL,
   `answer` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- A tábla adatainak kiíratása `quizzes`
+--
+
+INSERT INTO `quizzes` (`code`, `author`, `isPublic`, `question`, `options`, `answer`) VALUES
+('asd', '', 0, '1', '[\"1\",\"2\"]', '1'),
+('asd', '', 0, '2', '[\"2\",\"3\"]', '2'),
+('1', '', 0, '1,2,3', '[\"3\"]', '3'),
+('11', '', 0, '1', '[\"11\"]', '11'),
+('123uj', '\"asd\"', 1, 'asd', '[\"asd\",\"asdasd\"]', 'asd'),
+('123ujj', '\"asd\"', 0, 'asd', '[\"asd\",\"asdasd\"]', 'asd'),
+('asdasd', '\"asd\"', 1, 'asd', '[\"asd\",\"asdasd\"]', 'asd'),
+('asdasd', '\"asd\"', 1, '1', '[\"1\",\"2\"]', '1');
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `user`
+--
+
+CREATE TABLE `user` (
+  `username` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- A tábla adatainak kiíratása `user`
+--
+
+INSERT INTO `user` (`username`, `email`, `password`) VALUES
+('asd', 'asd@asd.asd', '$2b$10$1WLhLbV5srBMmKJW4gBpnuFdnyrf/iW/lvD/Q..73VI1zwMyUXGXy');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
