@@ -164,14 +164,7 @@ app.post('/api/saveQuiz', (req, res) => {
   })
 })
 
-// db rewrite 
-// JSON_ARRAYAGG(
-//   JSON_OBJECT(
-//     'question', question,
-//     'options', JSON_ARRAYAGG(JSON_EXTRACT(options, '$')),
-//     'answer', answer
-//   )
-// ) AS questions
+// SELECT CONCAT( '[', GROUP_CONCAT( JSON_OBJECT( 'question', question, 'options', options, 'answer', answer ) ), ']' ) AS quiz FROM quizzes WHERE code = "1";
 
 app.post('/api/getQuizzes', (req, res) => {
   const { author } = req.body
@@ -188,6 +181,7 @@ app.post('/api/getQuizzes', (req, res) => {
     if (results.length === 0) {
       return res.status(404).send('No quizzes found')
     } else {
+      console.log(results)
       const quizzes = results.map(row => ({
         code: row.code,
         author: row.author,
@@ -196,6 +190,7 @@ app.post('/api/getQuizzes', (req, res) => {
         options: JSON.parse(row.options),
         answer: row.answer
       }))
+      console.log(quizzes)
       return res.status(200).json({ success: true, quizzes })
     }
   })

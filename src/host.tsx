@@ -14,7 +14,7 @@ function App() {
 
     const fetchQuizzes = async () => {
         try {
-            const response = await fetch(`/api/getQuizzes`, { //összes public és user quiz lekerese
+            const response = await fetch(`http://localhost:3000/api/getQuizzes`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ author: user })
