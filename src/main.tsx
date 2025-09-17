@@ -6,6 +6,7 @@ import Login from './login.tsx'
 import Home from './home.tsx'
 import Create from './Create.tsx'
 import Host from './host.tsx'
+import Join from './Join.tsx'
 //dashboard, admin/broadcast felulet, quizId a host altal krealt kod legyen
 import './tailwind.css'
 
@@ -18,6 +19,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/create" element={<Create />} />
         <Route path="/host" element={<Host />} />
         <Route path="/quiz/:quizId" element={<Quiz />} />
+        <Route path="/join/:quizId" element={<Join />} />
       </Routes>
     </Router>
   </StrictMode>,
