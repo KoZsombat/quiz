@@ -5,7 +5,7 @@ import {body, validationResult} from 'express-validator';
 import express from 'express';
 import http from "http";
 import { Server } from "socket.io";
-import quizSocketHandler from "./quiz.ts"; //ts -> js
+import quizSocketHandler from "./quiz.js";
 import { randomBytes } from "crypto";
 
 const app = express(); 
@@ -30,6 +30,11 @@ con.connect((err) => {
   }
 })
 
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST"],
+}))
+
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -38,7 +43,7 @@ const io = new Server(server, {
 });
 app.use(express.json())
 
-quizSocketHandler(io); // Import the quizSocketHandler and pass the io instance
+quizSocketHandler(io);
 
 async function hashPassword(plainPassword) {
   const hashed = await bcrypt.hash(plainPassword, saltRounds);

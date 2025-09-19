@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useRef } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 
 function App() {
     const socket = io("http://localhost:3000");
     const { quizId } = useParams();
-    const [username, setUsername] = useState('');
+    const username = useRef<string>("");
 
     const readyUp = () => {
-        socket.emit('joinRoom', { quizId, username: 'test' });
+        
+        console.log(`id: ${quizId}, name: ${username.current}`)
+        socket.emit('joinRoom', { roomId: JSON.stringify(quizId), name: username.current });
     }
 
     socket.on('startQuiz', () => {
@@ -20,7 +22,7 @@ function App() {
     <div className='container mx-auto p-4'>
         <p>{quizId}</p>
         <div className="p-4 border rounded mb-4">
-            <input value={username} type="text" placeholder='Username' onChange={() => setUsername}/>
+            <input type="text" placeholder='Username' onChange={(e) => username.current = e.target.value}/>
             <button onClick={readyUp}>Ready</button>
         </div>
     </div>
