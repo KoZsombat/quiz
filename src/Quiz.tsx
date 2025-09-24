@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams } from "react-router-dom";
+import { io } from "socket.io-client";
 
 function App() {
+  const socket = io("http://localhost:3000");
   const { quizId } = useParams(); 
   const [index, setIndex] = useState(0)
 
@@ -34,8 +36,10 @@ function App() {
   const handleOptionClick = (option: string) => {
     if (option === questions[index].answer) {
       alert("Correct!");
+      socket.emit("correctAns") // send socketid or username
     } else {
       alert("Wrong answer.");
+      socket.emit("wrongAns") // send socketid or username
     }
     questions.length - 1 == index ? alert("Quiz completed!") : setIndex((prevIndex) => (prevIndex + 1));
   }

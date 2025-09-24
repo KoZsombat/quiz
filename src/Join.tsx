@@ -14,7 +14,7 @@ function App() {
     }
 
     socket.on('startQuiz', () => {
-        //window.location.href = `/quiz/${quizId}` 
+        window.location.href = `/quiz/${quizId}` 
     })
 
     return (
