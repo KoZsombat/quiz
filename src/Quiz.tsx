@@ -16,33 +16,25 @@ function App() {
   const [questions, setQuestions] = useState<Question[]>([]);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/getQuiz/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ code: quizId }),
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log("Fetched Quiz Data:", data);
-        setQuestions(data);
-      })
-      .catch(error => {
-        console.error("Error fetching quiz data:", error);
-      });
-  }, [quizId]);
+    socket.emit("getQuiestions", quizId)
+  }, [])
+
+  socket.on("sendQuestions", (data) => {
+    setQuestions(data);
+  })
 
   const handleOptionClick = (option: string) => {
     if (option === questions[index].answer) {
       alert("Correct!");
-      socket.emit("correctAns") // send socketid or username
+      socket.emit("correctAns", localStorage.getItem("username"))
     } else {
       alert("Wrong answer.");
-      socket.emit("wrongAns") // send socketid or username
     }
-    questions.length - 1 == index ? alert("Quiz completed!") : setIndex((prevIndex) => (prevIndex + 1));
   }
+
+  socket.on("next", () => {
+    questions.length - 1 == index ? alert("Quiz completed!") : setIndex((prevIndex) => (prevIndex + 1));
+  })
 
   if (questions.length === 0) {
     return <div className="p-4 text-center">Loading quiz...</div>;

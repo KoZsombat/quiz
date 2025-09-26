@@ -16,7 +16,7 @@ function App() {
     })
 
     const Start = () =>{
-        socket.emit("startRoom")
+        socket.emit("startRoom", JSON.stringify(quizId))
     }
 
     return (

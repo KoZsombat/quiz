@@ -11,6 +11,7 @@ function App() {
         
         console.log(`id: ${quizId}, name: ${username.current}`)
         socket.emit('joinRoom', { roomId: JSON.stringify(quizId), name: username.current });
+        localStorage.setItem("username", username.current)
     }
 
     socket.on('startQuiz', () => {

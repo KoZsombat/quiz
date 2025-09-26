@@ -17,9 +17,40 @@ module.exports = function quizSocketHandler(io) {
       socket.join(quizId)
     })
 
-    socket.on("startRoom", () => {
-      socket.emit("startQuiz")
+    socket.on("startRoom", (roomId) => {
+      io.to(roomId).emit("startQuiz")
     })
+
+    socket.on("getQuiestions", async (roomId) => {
+      socket.join(roomId)
+
+      const questions = []
+
+      const response = await fetch(`http://localhost:3000/api/getQuiz/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code: roomId }),
+      })
+      console.log(roomId)
+      let data;
+      try {
+        data = await response.json();
+      } catch (err) {
+        const text = await response.text();
+        data = { error: text };
+      }
+      console.log(data)
+      io.to(roomId).emit("sendQuestions", data)
+    })
+
+    socket.on("correctAns", (username) => {
+      const uIndex = roomUsers.findIndex(u => u.username == username)
+      roomUsers[uIndex].score += 1
+    })
+
+    // index lépegetések bef. , leaderboard megjelenítése
 
     socket.on("disconnect", () => {
       const user = roomUsers.findIndex(user => user.userId === socket.id)
