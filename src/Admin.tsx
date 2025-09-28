@@ -3,9 +3,18 @@ import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 
 function App() {
+
+  interface Users {
+    roomId: string;
+    userId: string;
+    username: string;
+    score: number;
+  }
+
     const socket = io("http://localhost:3000");
     const { quizId } = useParams();
     const [users, setUsers] = useState("0")
+    const [userList, setUserList] = useState<Users[]>([])
 
     useEffect(() => {
         socket.emit("adminCon", JSON.stringify(quizId))
@@ -15,8 +24,17 @@ function App() {
         setUsers(data.count)
     })
 
+    socket.on("scoreboardUpdate", (data) => {
+        setUserList(data)
+        console.log(data)
+    })
+
     const Start = () =>{
         socket.emit("startRoom", JSON.stringify(quizId))
+    }
+
+    const Next = () =>{
+        socket.emit("nextTrigger", JSON.stringify(quizId))
     }
 
     return (
@@ -26,7 +44,16 @@ function App() {
         <div className="p-4 border rounded mb-4">
             <p>User count: {users}</p>
             <button onClick={() => Start()}>Start</button>
+            <br />
+            <button onClick={() => Next()}>Next</button>
         </div>
+        {
+            userList.map(p => {
+                return (
+                    <p>{p.username}: {p.score}</p>
+                )
+            })
+        }
     </div>
     </>
     )
