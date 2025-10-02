@@ -48,9 +48,9 @@ function App() {
             <button onClick={() => Next()}>Next</button>
         </div>
         {
-            userList.map(p => {
+            userList.sort((a, b) => b.score - a.score).map(p => {
                 return (
-                    <p>{p.username}: {p.score}</p>
+                    <p key={p.username}>{p.username}: {p.score}</p>
                 )
             })
         }

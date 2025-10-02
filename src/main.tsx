@@ -8,7 +8,7 @@ import Create from './Create.tsx'
 import Host from './host.tsx'
 import Join from './Join.tsx'
 import Admin from './Admin.tsx'
-//dashboard, admin/broadcast felulet, no connect after start, end scoreboard
+//dashboard (edit own quizzes, start quizzes), broadcast felulet, no connect after start (after start make a roomList (id, isStarted) if isStarted == true return to home page except if your username is on the userList and in that room), admin feluletre csak az tudjon menni aki keszitette (db acctive creator name ellenorzes), torlodjon az username es a gameid is befejezes utan 1 percel
 import './tailwind.css'
 
 createRoot(document.getElementById('root')!).render(

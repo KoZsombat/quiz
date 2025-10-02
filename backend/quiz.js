@@ -5,7 +5,12 @@ module.exports = function quizSocketHandler(io) {
   io.on("connection", (socket) => {
     socket.on("joinRoom", (data) => {
       socket.join(data.roomId);
-      roomUsers.push({ roomId: data.roomId, userId: socket.id, username: data.name, score: 0 });
+      if (!roomUsers.some(p => p.username === data.name && p.roomId === data.roomId)) {
+        roomUsers.push({ roomId: data.roomId, userId: socket.id, username: data.name, score: 0 }); //socket id-t nem kell megjegyezni sztem
+      } else {
+        console.log("dup");
+        io.to(socket.id).emit("nameExist");
+      }
       io.to(data.roomId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId == data.roomId).length || 0 });
     });
 
@@ -64,11 +69,13 @@ module.exports = function quizSocketHandler(io) {
 
     socket.on("disconnect", () => {
       const user = roomUsers.findIndex(user => user.userId === socket.id)
+      console.log(roomUsers)
       if (user !== -1) {
         const { roomId } = roomUsers[user];
-        roomUsers.splice(user, 1);
+        roomUsers.splice(user);
       
         io.to(roomId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId == roomId).length || 0});
+        console.log(roomUsers)
       }
     });
   });
