@@ -1,12 +1,15 @@
 module.exports = function quizSocketHandler(io) {
 
   const roomUsers = [];
+  const roomList = []
 
   io.on("connection", (socket) => {
     socket.on("joinRoom", (data) => {
       socket.join(data.roomId);
       if (!roomUsers.some(p => p.username === data.name && p.roomId === data.roomId)) {
-        roomUsers.push({ roomId: data.roomId, userId: socket.id, username: data.name, score: 0 }); //socket id-t nem kell megjegyezni sztem
+        roomUsers.push({ roomId: data.roomId, userId: socket.id, username: data.name, score: 0 });
+        const rIndex = roomList.findIndex(r => r.roomId === data.roomId);
+        roomList[rIndex].users.push(data.name)
       } else {
         console.log("dup");
         io.to(socket.id).emit("nameExist");
@@ -16,18 +19,35 @@ module.exports = function quizSocketHandler(io) {
 
     socket.on("adminCon", (quizId) => {
       socket.join(quizId)
+      if (!roomList.some(r => r.roomId == quizId)) roomList.push({ roomId: quizId, isStarted: false, globalIndex: 0, users: []})
       io.to(quizId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId == quizId).length || 0});
+      io.to(quizId).emit("scoreboardUpdate", (roomUsers))
     })
 
     socket.on("userCon", (data) => {
-      socket.join(data.roomId);
-      if (!roomUsers.some(p => p.username === data.name && p.roomId === data.roomId)) {
-        roomUsers.push({ roomId: data.roomId, userId: socket.id, username: data.name, score: 0 });
+      const { roomId, name } = data;
+
+      const alreadyInRoom = roomUsers.some(u => u.username === name && u.roomId === roomId);
+
+      if (!alreadyInRoom) {
+        const rIndex = roomList.findIndex(r => r.roomId === roomId);
+
+        try{
+          if (roomList[rIndex].users.includes(name)) {
+            roomUsers.push({ roomId, userId: socket.id, username: name, score: 0 });
+            socket.join(roomId);
+          } else {
+            io.to(socket.id).emit("joinError");
+          }
+        } catch (err) {
+          if (err) io.to(socket.id).emit("joinError");
+        }
       } else {
-        console.log("dup");
+        io.to(socket.id).emit("joinError");
       }
-      io.to(data.roomId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId == data.roomId).length || 0 });
-    })
+
+      io.to(roomId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId === roomId).length });
+    });
 
     socket.on("startRoom", (roomId) => {
       io.to(roomId).emit("startQuiz")
@@ -64,7 +84,14 @@ module.exports = function quizSocketHandler(io) {
     })
 
     socket.on("nextTrigger", (roomId) =>{
-      io.to(roomId).emit("next")
+      const rIndex = roomList.findIndex(r => r.roomId === roomId)
+      io.to(roomId).emit("next", (roomList[rIndex].globalIndex))
+      roomList[rIndex].globalIndex += 1
+    })
+
+    socket.on("endOfQuiz", (roomId) => {
+      const rIndex = roomList.findIndex(r => r.roomId === roomId)
+      roomList.splice(rIndex)
     })
 
     socket.on("disconnect", () => {

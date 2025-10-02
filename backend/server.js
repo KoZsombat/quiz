@@ -220,6 +220,26 @@ app.post('/api/startQuiz', (req, res) => {
   })
 })
 
+app.post('/api/endQuiz', (req, res) => {
+  const { url } = req.body
+  
+  if (!url) {
+    return res.status(400).send('Invalid input')
+  }
+
+  const query = 'DELETE FROM `active` WHERE q_url = ?'
+  con.query(query, [url], (err, results) => {
+    if (err) {
+      return res.status(500).send('Error retrieving quiz')
+    }
+    if (results.length === 0) {
+      return res.status(404).send('Quiz not found')
+    } else {
+      return res.status(200).json({ success: true})
+    }
+  })
+})
+
 app.post('/api/getQuiz', (req, res) => {
   const { code } = req.body
   

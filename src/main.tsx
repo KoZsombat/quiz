@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+//import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Quiz from './Quiz.tsx'
@@ -8,11 +8,13 @@ import Create from './Create.tsx'
 import Host from './host.tsx'
 import Join from './Join.tsx'
 import Admin from './Admin.tsx'
-//dashboard (edit own quizzes, start quizzes), broadcast felulet, no connect after start (after start make a roomList (id, isStarted) if isStarted == true return to home page except if your username is on the userList and in that room), admin feluletre csak az tudjon menni aki keszitette (db acctive creator name ellenorzes), torlodjon az username es a gameid is befejezes utan 1 percel
+// dashboard (edit own quizzes, start quizzes), 
+// broadcast felulet, 
+// admin feluletre csak az tudjon menni aki keszitette (db acctive creator name ellenorzes) 
+// elvileg torli a quizt és minden hozzátartozót a scoreboard mutatásánál
 import './tailwind.css'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -24,5 +26,4 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/admin/:quizId" element={<Admin />} />
       </Routes>
     </Router>
-  </StrictMode>,
 )
