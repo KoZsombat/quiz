@@ -1,3 +1,5 @@
+const { data } = require("react-router-dom");
+
 module.exports = function quizSocketHandler(io) {
 
   const roomUsers = [];
@@ -7,7 +9,7 @@ module.exports = function quizSocketHandler(io) {
     socket.on("joinRoom", (data) => {
       socket.join(data.roomId);
       if (!roomUsers.some(p => p.username === data.name && p.roomId === data.roomId)) {
-        roomUsers.push({ roomId: data.roomId, userId: socket.id, username: data.name, score: 0 });
+        roomUsers.push({ roomId: data.roomId, userId: socket.id, username: data.name, score: 0 }); // use jwt auth instead of username
         const rIndex = roomList.findIndex(r => r.roomId === data.roomId);
         roomList[rIndex].users.push(data.name)
       } else {
@@ -17,11 +19,15 @@ module.exports = function quizSocketHandler(io) {
       io.to(data.roomId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId == data.roomId).length || 0 });
     });
 
-    socket.on("adminCon", (quizId) => {
-      socket.join(quizId)
-      if (!roomList.some(r => r.roomId == quizId)) roomList.push({ roomId: quizId, isStarted: false, globalIndex: 0, users: []})
-      io.to(quizId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId == quizId).length || 0});
-      io.to(quizId).emit("scoreboardUpdate", (roomUsers))
+    socket.on("adminCon", (data) => {
+      socket.join(data.quizId)
+      if (!data.auth) io.to(socket.id).emit("joinError");
+      if (!roomList.some(r => r.roomId == data.quizId)) 
+        roomList.push({ roomId: data.quizId, isStarted: false, globalIndex: 0, users: [], auth: data.auth})
+      else if (roomList.some(r => r.roomId == data.quizId && r.auth !== data.auth))
+        io.to(socket.id).emit("joinError");
+      io.to(data.quizId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId == data.quizId).length || 0});
+      io.to(data.quizId).emit("scoreboardUpdate", (roomUsers))
     })
 
     socket.on("userCon", (data) => {

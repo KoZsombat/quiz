@@ -12,6 +12,8 @@ function App() {
   const optionRef = useRef("");
   const [userList, setUserList] = useState<Users[]>([]);
   const [showScoreboard, setShowScoreboard] = useState(false);
+  const div = useRef<HTMLDivElement>(null);
+  const correct = useRef<HTMLButtonElement | null>(null);
 
   interface Users {
     roomId: string;
@@ -60,13 +62,11 @@ function App() {
   }, [questions])
 
   useEffect(() => {
-    const nextHandler = (index: number) => {
+    const nextHandler = async (index: number) => {
       console.log(`${index}`)
       const qs = questionsRef.current;
       const i = index;
       const opt = optionRef.current;
-
-      if (!qs[i]) return;
 
       if (opt === qs[i].answer) {
         alert("Correct!");
@@ -75,7 +75,21 @@ function App() {
         alert("Wrong answer.");
       }
 
+      const child = correct.current;
+
+      if (!child) return;
+
+      child.classList.remove("bg-gray-200");
+      child.classList.remove("bg-gray-400");
+      child.classList.add("bg-green-500");
+
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
+      child.classList.remove("bg-green-500");
+      child.classList.add("bg-gray-200");
+
       setOption("");
+
       if (i === qs.length - 1) {
         setShowScoreboard(true)
         localStorage.removeItem("username")
@@ -84,7 +98,7 @@ function App() {
           fetch(`http://localhost:3000/api/endQuiz`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(quizId)
+              body: JSON.stringify({ url: quizId })
           });           
         } catch (e) {
             console.error('Error fetching quizzes', e);
@@ -104,7 +118,7 @@ function App() {
   }
 
   if (questions.length === 0) {
-    return <div className="p-4 text-center">Loading quiz...</div>;
+    return <div className="p-4 text-center">Didn't find the quiz!</div>;
   }
 
   if (showScoreboard) {
@@ -118,9 +132,9 @@ function App() {
       <p>{quizId}</p>
       <div className="p-4 border rounded mb-4">
         <h2 className="text-lg font-bold text-center">{questions[index].question}</h2>
-        <div className="grid grid-cols-2 pl-5 mt-2">
+        <div className="grid grid-cols-2 pl-5 mt-2" ref={div}>
           {questions[index].options.map((option, i) => (
-            <button key={i} className={soption == option ? "m-1 bg-gray-400 p-5 cursor-pointer hover:bg-gray-300 transition-all transition-normal duration-100 ease-linear" : "m-1 bg-gray-200 p-5 cursor-pointer hover:bg-gray-300 transition-all transition-normal duration-100 ease-linear"} onClick={() => handleOptionClick(option)}>{option}</button>
+            <button key={i} ref={option == questions[index].answer ? correct : null} className={soption == option ? "m-1 bg-gray-400 p-5 cursor-pointer hover:bg-gray-300 transition-all transition-normal duration-100 ease-linear" : "m-1 bg-gray-200 p-5 cursor-pointer hover:bg-gray-300 transition-all transition-normal duration-100 ease-linear"} onClick={() => handleOptionClick(option)}>{option}</button>
           ))}
         </div>
       </div>

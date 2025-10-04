@@ -52,7 +52,7 @@ function App() {
             });
             const data = await response.json();
             if (data.success) {
-                window.location.href = `/join/${data.url}`
+                window.location.href = `/admin/${data.url}`
             } else {
                 console.error('Failed to start quiz');
             }

@@ -8,10 +8,9 @@ import Create from './Create.tsx'
 import Host from './host.tsx'
 import Join from './Join.tsx'
 import Admin from './Admin.tsx'
-// dashboard (edit own quizzes, start quizzes), 
-// broadcast felulet, 
-// admin feluletre csak az tudjon menni aki keszitette (db acctive creator name ellenorzes) 
-// elvileg torli a quizt és minden hozzátartozót a scoreboard mutatásánál
+// broadcast felulet
+// style
+//? admin no refresh crash
 import './tailwind.css'
 
 createRoot(document.getElementById('root')!).render(

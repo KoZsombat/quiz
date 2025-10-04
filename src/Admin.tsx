@@ -17,8 +17,12 @@ function App() {
     const [userList, setUserList] = useState<Users[]>([])
 
     useEffect(() => {
-        socket.emit("adminCon", JSON.stringify(quizId))
+        socket.emit("adminCon", { quizId: JSON.stringify(quizId), auth: localStorage.getItem("user")})
     }, [])
+
+    socket.on("joinError", () => {
+        window.location.href = `/`
+    })
 
     socket.on('usersUpdate', (data) => {
         setUsers(data.count)
