@@ -10,14 +10,20 @@ export default function Alert({ userList }: { userList: Users[] }) {
     const Users = userList;
 
     return (
-        <div className="flex justify-center items-center w-[100vw]">
-            <div className="fixed top-2 right-0 left-0 bg-blue-100 border border-blue-400 text-white px-4 py-3 rounded relative z-50 max-w-[80vw]" role="alert">
-                <p className="font-bold" >Scoreboard:</p>
-                {Users.sort((a, b) => b.score - a.score).map(p => {
-                    return (
-                        <p key={p.username}>{p.username}: {p.score}</p>
-                    )
-                })}
+        <div className="flex justify-center items-start w-full fixed top-4 z-50 px-4">
+            <div
+                className="bg-blue-600 border border-blue-700 text-white px-6 py-4 rounded-xl shadow-lg max-w-md w-full space-y-2"
+                role="alert"
+            >
+                <p className="font-bold text-lg text-center mb-2">🏆 Scoreboard</p>
+                <div className="divide-y divide-blue-500">
+                {Users.sort((a, b) => b.score - a.score).map((p, index) => (
+                    <div key={p.username} className="flex justify-between py-1 px-2">
+                    <span className="font-medium">{index + 1}. {p.username}</span>
+                    <span className="font-bold">{p.score}</span>
+                    </div>
+                ))}
+                </div>
             </div>
         </div>
     );

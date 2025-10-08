@@ -8,9 +8,7 @@ import Create from './Create.tsx'
 import Host from './host.tsx'
 import Join from './Join.tsx'
 import Admin from './Admin.tsx'
-// broadcast felulet
-// style
-//? admin no refresh crash
+import Broadcast from './Broadcast.tsx'
 import './tailwind.css'
 
 createRoot(document.getElementById('root')!).render(
@@ -23,6 +21,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/quiz/:quizId" element={<Quiz />} />
         <Route path="/join/:quizId" element={<Join />} />
         <Route path="/admin/:quizId" element={<Admin />} />
+        <Route path="/broadcast/:quizId" element={<Broadcast />} />
       </Routes>
     </Router>
 )

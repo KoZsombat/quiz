@@ -126,20 +126,48 @@ function App() {
   }
 
   return (
-    <>
-    <div className='container mx-auto p-4'>
-      <button onClick={() => console.log(questions)}>Next</button>
-      <p>{quizId}</p>
-      <div className="p-4 border rounded mb-4">
-        <h2 className="text-lg font-bold text-center">{questions[index].question}</h2>
-        <div className="grid grid-cols-2 pl-5 mt-2" ref={div}>
-          {questions[index].options.map((option, i) => (
-            <button key={i} ref={option == questions[index].answer ? correct : null} className={soption == option ? "m-1 bg-gray-400 p-5 cursor-pointer hover:bg-gray-300 transition-all transition-normal duration-100 ease-linear" : "m-1 bg-gray-200 p-5 cursor-pointer hover:bg-gray-300 transition-all transition-normal duration-100 ease-linear"} onClick={() => handleOptionClick(option)}>{option}</button>
-          ))}
-        </div>
+<>
+  <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-50 flex flex-col items-center py-10 px-4">
+    <div className="w-full max-w-3xl bg-white rounded-3xl shadow-lg border border-blue-100 p-8">
+      <div className="flex justify-between items-center mb-6">
+        <p className="text-blue-700 font-semibold text-lg">
+          Quiz ID: <span className="text-gray-600">{quizId}</span>
+        </p>
+      </div>
+
+      <h2 className="text-2xl font-extrabold text-center text-blue-800 mb-6">
+        {questions[index].question}
+      </h2>
+
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+        ref={div}
+      >
+        {questions[index].options.map((option, i) => {
+          const isSelected = soption === option;
+          const isCorrect = option === questions[index].answer;
+
+          return (
+            <button
+              key={i}
+              ref={isCorrect ? correct : null}
+              onClick={() => handleOptionClick(option)}
+              className={`p-5 rounded-xl text-lg font-semibold shadow-sm border transition-all duration-200
+                ${
+                  isSelected
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-700'
+                    : 'bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-800'
+                }`}
+            >
+              {option}
+            </button>
+          );
+        })}
       </div>
     </div>
-    </>
+  </div>
+</>
+
   )
 }
 

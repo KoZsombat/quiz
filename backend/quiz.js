@@ -30,6 +30,10 @@ module.exports = function quizSocketHandler(io) {
       io.to(data.quizId).emit("scoreboardUpdate", (roomUsers))
     })
 
+    socket.on("broadcastCon", (data) => {
+      socket.join(data.quizId)
+    })
+
     socket.on("userCon", (data) => {
       const { roomId, name } = data;
 

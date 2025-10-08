@@ -37,15 +37,36 @@ function App() {
 
     return (
     <>
-    <div className="flex-1 w-full items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-300">
-    <div className='container mx-auto p-4'>
-        {errorMsg && <Alert error={errorMsg} /> }
-        <p>{quizId}</p>
-        <div className="p-4 border rounded mb-4">
-            <input type="text" placeholder='Username' defaultValue={username.current ? username.current : ""} onChange={(e) => username.current = e.target.value}/>
-            <button ref={btn} onClick={readyUp}>Ready</button>
+    <div className="flex-1 w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100">
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-lg border border-blue-100 p-8">
+            {errorMsg && <Alert error={errorMsg} />}
+
+            <p className="text-center text-sm text-gray-500 mb-6">
+            Quiz ID: <span className="font-semibold text-blue-700">{quizId}</span>
+            </p>
+
+            <h2 className="text-2xl font-extrabold text-blue-700 text-center mb-6">
+            Join the Quiz
+            </h2>
+
+            <div className="flex flex-col items-center">
+            <input
+                type="text"
+                placeholder="Enter your username"
+                defaultValue={username.current ? username.current : ''}
+                onChange={(e) => (username.current = e.target.value)}
+                className="w-full border border-blue-200 rounded-lg px-4 py-3 mb-5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            />
+
+            <button
+                ref={btn}
+                onClick={readyUp}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all"
+            >
+                Ready Up
+            </button>
+            </div>
         </div>
-    </div>
     </div>
     </>
     )
