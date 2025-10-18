@@ -7,19 +7,24 @@ module.exports = function quizSocketHandler(io) {
 
   io.on("connection", (socket) => {
     socket.on("joinRoom", (data) => {
+      console.log("joinRoom data:", data);
+      console.log("Current roomList:", roomList);
+      console.log("Current roomUsers:", roomUsers);
+      if (!roomList.some(r => r.roomId == data.roomId)) return
       socket.join(data.roomId);
       if (!roomUsers.some(p => p.username === data.name && p.roomId === data.roomId)) {
         roomUsers.push({ roomId: data.roomId, userId: socket.id, username: data.name, score: 0 }); // use jwt auth instead of username
         const rIndex = roomList.findIndex(r => r.roomId === data.roomId);
         roomList[rIndex].users.push(data.name)
       } else {
-        console.log("dup");
         io.to(socket.id).emit("nameExist");
       }
       io.to(data.roomId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId == data.roomId).length || 0 });
+      console.log("Current roomUsers:", roomUsers);
     });
 
     socket.on("adminCon", (data) => {
+      //if (!roomList.some(r => r.roomId == data.roomId)) return
       socket.join(data.quizId)
       if (!data.auth) io.to(socket.id).emit("joinError");
       if (!roomList.some(r => r.roomId == data.quizId)) 
@@ -31,10 +36,13 @@ module.exports = function quizSocketHandler(io) {
     })
 
     socket.on("broadcastCon", (data) => {
+      if (!roomList.some(r => r.roomId == data.roomId)) return
       socket.join(data.quizId)
     })
 
     socket.on("userCon", (data) => {
+      if (!roomList.some(r => r.roomId == data.roomId)) return
+      
       const { roomId, name } = data;
 
       const alreadyInRoom = roomUsers.some(u => u.username === name && u.roomId === roomId);
@@ -64,23 +72,32 @@ module.exports = function quizSocketHandler(io) {
       io.to(roomId).emit("scoreboardUpdate", (roomUsers))
     })
 
-    socket.on("getQuiestions", async (roomId) => {
+    socket.on("getQuiestions", async (adat) => { //body has been already read error
+      let roomId = adat.roomId;
+      console.log("getQuiestions roomId:", roomId);
+      if (!roomList.some(r => r.roomId == roomId)) return
       socket.join(roomId)
-      const response = await fetch(`http://localhost:3000/api/getQuiz/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ code: roomId }),
-      })
-      let data;
       try {
-        data = await response.json();
+        const response = await fetch(`http://localhost:3000/api/getQuiz/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ code: roomId }), // ez string az a baj
+        })
+        let data;
+        try {
+          data = await response.json();
+        } catch (err) {
+          console.error("Error parsing JSON:", err);
+          //const text = await response.text();
+          //data = { error: text };
+        }
+        io.to(roomId).emit("sendQuestions", data)
       } catch (err) {
-        const text = await response.text();
-        data = { error: text };
+        console.error("Fetch error:", err);
+        io.to(roomId).emit("sendQuestions", { error: "Failed to fetch data" });
       }
-      io.to(roomId).emit("sendQuestions", data)
     })
 
     socket.on("correctAns", (username) => {
@@ -106,13 +123,11 @@ module.exports = function quizSocketHandler(io) {
 
     socket.on("disconnect", () => {
       const user = roomUsers.findIndex(user => user.userId === socket.id)
-      console.log(roomUsers)
       if (user !== -1) {
         const { roomId } = roomUsers[user];
         roomUsers.splice(user);
       
         io.to(roomId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId == roomId).length || 0});
-        console.log(roomUsers)
       }
     });
   });

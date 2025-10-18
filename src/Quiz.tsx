@@ -38,7 +38,7 @@ function App() {
   useEffect(() => { optionRef.current = soption }, [soption]);
 
   useEffect(() => {
-    socket.emit("getQuiestions", quizId)
+    socket.emit("getQuiestions", { roomId: JSON.stringify(quizId) })
   }, [])
 
   socket.on("sendQuestions", (data) => {

@@ -85,7 +85,12 @@ function App() {
   }
 
   if (index >= questions.length) {
-    return <div className="p-4 text-center">The quiz has ended!</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-50 flex flex-col items-center py-10 px-4">
+        <ScoreBoard userList={userList} />
+        <div className="p-4 text-center mt-20 text-2xl font-extrabold text-blue-800">The quiz has ended!</div>
+      </div>
+    );
   }
 
   return (
