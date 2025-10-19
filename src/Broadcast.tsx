@@ -30,7 +30,7 @@ function App() {
     useEffect(() => { questionsRef.current = questions }, [questions]);
 
     useEffect(() => {
-        socket.emit("broadcastCon", { quizId: JSON.stringify(quizId)})
+        socket.emit("broadcastCon", { roomId: JSON.stringify(quizId)})
     }, [])
 
     useEffect(() => {
@@ -84,8 +84,17 @@ function App() {
     return <div className="p-4 text-center">Didn't find the quiz!</div>;
   }
 
-  if (index >= questions.length) {
-    return <div className="p-4 text-center">The quiz has ended!</div>;
+  if (index >= questions.length-1) { //ha vége a kvíznek ezt jelenjen meg
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-50 flex flex-col items-center py-10 px-4">
+        <ScoreBoard userList={userList} />
+        <div className="p-4 text-center mt-20 text-2xl font-extrabold text-blue-800">The quiz has ended!</div>
+      </div>
+    );
+  }
+
+  if (false) { // ha a játék még nem kezdődött el ezt jelenítse meg
+    return <div className="p-4 text-center">Quiz didn't started yet</div>;
   }
 
   return (

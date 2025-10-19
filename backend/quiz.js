@@ -7,13 +7,13 @@ module.exports = function quizSocketHandler(io) {
 
   io.on("connection", (socket) => {
     socket.on("joinRoom", (data) => {
+      if (!roomList.some(r => r.roomId == data.roomId)) return
       socket.join(data.roomId);
       if (!roomUsers.some(p => p.username === data.name && p.roomId === data.roomId)) {
         roomUsers.push({ roomId: data.roomId, userId: socket.id, username: data.name, score: 0 }); // use jwt auth instead of username
         const rIndex = roomList.findIndex(r => r.roomId === data.roomId);
         roomList[rIndex].users.push(data.name)
       } else {
-        console.log("dup");
         io.to(socket.id).emit("nameExist");
       }
       io.to(data.roomId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId == data.roomId).length || 0 });
@@ -31,10 +31,13 @@ module.exports = function quizSocketHandler(io) {
     })
 
     socket.on("broadcastCon", (data) => {
-      socket.join(data.quizId)
+      if (!roomList.some(r => r.roomId == data.roomId)) return
+      socket.join(data.roomId)
     })
 
     socket.on("userCon", (data) => {
+      if (!roomList.some(r => r.roomId == data.roomId)) return
+
       const { roomId, name } = data;
 
       const alreadyInRoom = roomUsers.some(u => u.username === name && u.roomId === roomId);
@@ -65,6 +68,7 @@ module.exports = function quizSocketHandler(io) {
     })
 
     socket.on("getQuiestions", async (roomId) => {
+      if (!roomList.some(r => r.roomId == JSON.stringify(roomId))) return
       socket.join(roomId)
       const response = await fetch(`http://localhost:3000/api/getQuiz/`, {
         method: 'POST',
@@ -77,8 +81,7 @@ module.exports = function quizSocketHandler(io) {
       try {
         data = await response.json();
       } catch (err) {
-        const text = await response.text();
-        data = { error: text };
+        data = { err };
       }
       io.to(roomId).emit("sendQuestions", data)
     })
@@ -106,13 +109,11 @@ module.exports = function quizSocketHandler(io) {
 
     socket.on("disconnect", () => {
       const user = roomUsers.findIndex(user => user.userId === socket.id)
-      console.log(roomUsers)
       if (user !== -1) {
         const { roomId } = roomUsers[user];
         roomUsers.splice(user);
       
         io.to(roomId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId == roomId).length || 0});
-        console.log(roomUsers)
       }
     });
   });
