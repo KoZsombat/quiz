@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Alert from "./Alert";
+import Alert from '../components/Alert.tsx'
 
 function App() {
     const [showLogin, setShowLogin] = useState(true);

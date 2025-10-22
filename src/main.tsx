@@ -1,15 +1,17 @@
 //import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Quiz from './Quiz.tsx'
-import Login from './login.tsx'
-import Home from './home.tsx'
-import Create from './Create.tsx'
-import Host from './host.tsx'
-import Join from './Join.tsx'
-import Admin from './Admin.tsx'
-import Broadcast from './Broadcast.tsx'
+import Quiz from './pages/Quiz.tsx'
+import Login from './pages/login.tsx'
+import Home from './pages/home.tsx'
+import Create from './pages/Create.tsx'
+import Host from './pages/host.tsx'
+import Join from './pages/Join.tsx'
+import Admin from './pages/Admin.tsx'
+import Broadcast from './pages/Broadcast.tsx'
 import './tailwind.css'
+
+// all functions into the script ts
 
 createRoot(document.getElementById('root')!).render(
     <Router>

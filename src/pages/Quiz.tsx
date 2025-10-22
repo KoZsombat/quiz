@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
-import ScoreBoard from './Scoreboard.tsx'
+import ScoreBoard from '../components/Scoreboard.tsx'
 
 function App() {
   const socket = io("http://localhost:3000");
@@ -38,7 +38,7 @@ function App() {
   useEffect(() => { optionRef.current = soption }, [soption]);
 
   useEffect(() => {
-    socket.emit("getQuiestions", { roomId: JSON.stringify(quizId) })
+    socket.emit("getQuiestions", quizId)
   }, [])
 
   socket.on("sendQuestions", (data) => {
@@ -69,10 +69,7 @@ function App() {
       const opt = optionRef.current;
 
       if (opt === qs[i].answer) {
-        alert("Correct!");
         socket.emit("correctAns", localStorage.getItem("username"));
-      } else {
-        alert("Wrong answer.");
       }
 
       const child = correct.current;

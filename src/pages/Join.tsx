@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
-import Alert from './Alert'
+import Alert from '../components/Alert.tsx'
 
 function App() {
     const socket = io("http://localhost:3000");

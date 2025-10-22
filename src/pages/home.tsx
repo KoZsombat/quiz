@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom'
-import useCheckLogin from './scripts/useCheckLogin.ts'
+import useCheckLogin from '../scripts/useCheckLogin.ts'
 
 function App() {
     const { logged, username } = useCheckLogin();

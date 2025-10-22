@@ -242,8 +242,6 @@ app.post('/api/endQuiz', (req, res) => {
 
 app.post('/api/getQuiz', (req, res) => {
   const { code } = req.body
-
-  console.log(typeof code, code);
   
   if (!code) {
     return res.status(400).send('Invalid input')

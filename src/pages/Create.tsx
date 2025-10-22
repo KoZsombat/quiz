@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react'
-import useCheckLogin from './scripts/useCheckLogin';
+import useCheckLogin from '../scripts/useCheckLogin';
 
 function App() {
     const { username } = useCheckLogin();
