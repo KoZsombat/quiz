@@ -9,6 +9,7 @@ import quizExpressHandler from "./src/quiz_express.js";
 import loginHandler from "./src/login.js";
 
 // jwt token, .env for jwt and db and cors and api ip address on frontend
+// alert anim, alert color, better admin panel, quiz question time limit, delete quiz after admin disconnect
 
 const app = express();
 
