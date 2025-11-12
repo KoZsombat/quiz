@@ -19,7 +19,7 @@ function App() {
 
     useEffect(() => {
         if (quizzes.length > 0) {
-            const publicQuizzes = quizzes.filter(q => q.visibility === 'public');
+            const publicQuizzes = quizzes.filter(q => q.visibility === 'public'); //nem filter kell mert a kerdesek vannak elmentve es ahany kerdes van annyiszor hozza elo a quiz a hostnal
             setPub(publicQuizzes);
             const ownQuizzes = quizzes.filter(q => q.author === user);
             setOwn(ownQuizzes);
@@ -150,7 +150,7 @@ function App() {
             </div> 
             </main>
             <footer className="text-center py-6 text-gray-500 text-sm bg-blue-50 border-t border-blue-100">
-                © {new Date().getFullYear()} QuizParty — Made with 💙 for fun learning
+                © {new Date().getFullYear()} QuizParty — Made by *
             </footer>
            </div>
         );

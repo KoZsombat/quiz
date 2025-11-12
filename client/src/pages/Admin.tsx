@@ -87,7 +87,7 @@ function App() {
                 </h3>
 
                 <div className="divide-y divide-blue-100">
-                    {userList
+                    {userList //leader board reset
                     .sort((a, b) => b.score - a.score)
                     .map((p, index) => (
                         <div
@@ -105,7 +105,7 @@ function App() {
             </div> 
             </main>
             <footer className="text-center py-6 text-gray-500 text-sm bg-blue-50 border-t border-blue-100">
-                © {new Date().getFullYear()} QuizParty — Made with 💙 for fun learning
+                © {new Date().getFullYear()} QuizParty — Made by *
             </footer>
         </div>
     )

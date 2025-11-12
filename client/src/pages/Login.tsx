@@ -200,7 +200,7 @@ function App() {
             </div>
 
             <div className="px-6 py-4 bg-blue-50 border-t border-blue-100 text-center text-sm text-blue-600">
-            © {new Date().getFullYear()} QuizParty — Made with 💙
+            © {new Date().getFullYear()} QuizParty — Made by *
             </div>
         </div>
         </div>

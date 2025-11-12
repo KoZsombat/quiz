@@ -132,7 +132,7 @@ function App() {
         className="grid grid-cols-1 sm:grid-cols-2 gap-4"
         ref={div}
       >
-        {questions[index].options.map((option, i) => {
+        {questions[index].options.map((option, i) => { //az elso kerdest irja ki ketszer es ha jol megvalaszolja ketszer ugyan ugy 1 pontot kap
           const isSelected = soption === option;
           const isCorrect = option === questions[index].answer;
 
