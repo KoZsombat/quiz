@@ -19,9 +19,9 @@ function App() {
 
     useEffect(() => {
         if (quizzes.length > 0) {
-            const publicQuizzes = quizzes.filter(q => q.visibility === 'public'); //nem filter kell mert a kerdesek vannak elmentve es ahany kerdes van annyiszor hozza elo a quiz a hostnal
+            const publicQuizzes = quizzes.filter(q => q.visibility === 'public').filter((q, idx, arr) => arr.findIndex(x => x.code === q.code) === idx);
             setPub(publicQuizzes);
-            const ownQuizzes = quizzes.filter(q => q.author === user);
+            const ownQuizzes = quizzes.filter(q => q.author === user).filter((q, idx, arr) => arr.findIndex(x => x.code === q.code) === idx);
             setOwn(ownQuizzes);
         }
     }, [quizzes]);
@@ -85,7 +85,7 @@ function App() {
                 <select
                     value={view}
                     onChange={(e) => setView(e.target.value as 'pub' | 'own')}
-                    className="bg-blue-50 border border-blue-200 text-blue-800 font-medium px-4 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none transition"
+                    className="bg-blue-50 border border-blue-200 text-blue-800 font-medium px-4 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none transition cursor-pointer"
                 >
                     <option value="pub">🌍 Public Quizzes</option>
                     <option value="own">👤 Your Quizzes</option>
@@ -111,7 +111,7 @@ function App() {
                         </p>
                         <button
                             onClick={() => StartQuiz(quiz.code)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg w-full font-semibold transition"
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg w-full font-semibold transition cursor-pointer"
                         >
                             Start
                         </button>
@@ -150,7 +150,7 @@ function App() {
             </div> 
             </main>
             <footer className="text-center py-6 text-gray-500 text-sm bg-blue-50 border-t border-blue-100">
-                © {new Date().getFullYear()} QuizParty — Made by *
+                © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href='https://github.com/KoZsombat?'> Zsombor</a>
             </footer>
            </div>
         );

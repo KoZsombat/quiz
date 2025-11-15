@@ -11,6 +11,7 @@ function App() {
   const [userList, setUserList] = useState<Users[]>([]);
   const div = useRef<HTMLDivElement>(null);
   const correct = useRef<HTMLButtonElement | null>(null);
+  const [isStarted, setIsStarted] = useState(false);
 
   interface Users {
     roomId: string;
@@ -30,11 +31,11 @@ function App() {
     useEffect(() => { questionsRef.current = questions }, [questions]);
 
     useEffect(() => {
-        socket.emit("broadcastCon", { roomId: JSON.stringify(quizId)})
+      socket.emit("broadcastCon", { roomId: JSON.stringify(quizId)})
     }, [])
 
     useEffect(() => {
-    socket.emit("getQuiestions", quizId)
+      socket.emit("getQuiestions", quizId)
     }, [])
 
   socket.on("sendQuestions", (data) => {
@@ -77,7 +78,11 @@ function App() {
     return <div className="p-4 text-center">Didn't find the quiz!</div>;
   }
 
-  if (index >= questions.length-1) { //ha vége a kvíznek ezt jelenjen meg
+  socket.on("endOfQuiz", () => {
+    setIndex(1000);
+  });
+
+  if (index === questions.length || index === 1000) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-50 flex flex-col items-center py-10 px-4">
         <ScoreBoard userList={userList} />
@@ -86,8 +91,12 @@ function App() {
     );
   }
 
-  if (false) { // ha a játék még nem kezdődött el ezt jelenítse meg
-    return <div className="p-4 text-center">Quiz didn't started yet</div>;
+  socket.on("startQuiz", () => {
+    setIsStarted(true);
+  });
+
+  if (isStarted === false) {
+    return <div className="p-4 text-center">Quiz didn't start yet</div>;
   }
 
   return (

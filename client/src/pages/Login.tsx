@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Alert from '../components/Alert.tsx'
 
 function App() {
@@ -9,14 +9,6 @@ function App() {
     const [registerEmail, setRegisterEmail] = useState('');
     const [registerPass, setRegisterPass] = useState('');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (errorMsg != null){
-        setTimeout(() => {
-            setErrorMsg(null)
-        }, 3000);
-        }
-    }, [errorMsg]);
 
     const storeUser = async (user: string) => {
         try {
@@ -122,12 +114,12 @@ function App() {
             </div>
 
             <div className="p-6">
-            {errorMsg && <Alert error={errorMsg} />}
+            {errorMsg && <Alert error={errorMsg} onClose={() => setErrorMsg(null)}/>}
 
             <div className="flex items-center justify-center gap-2 mb-6">
                 <button
                 onClick={() => setShowLogin(true)}
-                className={`px-5 py-2 rounded-xl font-semibold transition ${
+                className={`px-5 py-2 rounded-xl font-semibold transition cursor-pointer ${
                     showLogin ? 'bg-white text-blue-600 shadow' : 'bg-blue-50 text-blue-500'
                 }`}
                 >
@@ -135,7 +127,7 @@ function App() {
                 </button>
                 <button
                 onClick={() => setShowLogin(false)}
-                className={`px-5 py-2 rounded-xl font-semibold transition ${
+                className={`px-5 py-2 rounded-xl font-semibold transition cursor-pointer ${
                     !showLogin ? 'bg-white text-blue-600 shadow' : 'bg-blue-50 text-blue-500'
                 }`}
                 >
@@ -161,7 +153,7 @@ function App() {
                 />
                 <button
                     onClick={handleLogin}
-                    className="w-full inline-flex justify-center items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-5 py-3 rounded-xl font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition"
+                    className="w-full inline-flex justify-center items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-5 py-3 rounded-xl font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition cursor-pointer"
                 >
                     Login
                 </button>
@@ -191,7 +183,7 @@ function App() {
                 />
                 <button
                     onClick={handleRegister}
-                    className="w-full inline-flex justify-center items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-5 py-3 rounded-xl font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition"
+                    className="w-full inline-flex justify-center items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-5 py-3 rounded-xl font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition cursor-pointer"
                 >
                     Register
                 </button>
@@ -200,7 +192,7 @@ function App() {
             </div>
 
             <div className="px-6 py-4 bg-blue-50 border-t border-blue-100 text-center text-sm text-blue-600">
-            © {new Date().getFullYear()} QuizParty — Made by *
+            © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href='https://github.com/KoZsombat?'> Zsombor</a>
             </div>
         </div>
         </div>

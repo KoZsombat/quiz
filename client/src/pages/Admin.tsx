@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Link } from 'react-router-dom'
 import Socket from '../scripts/useSocket.ts'
@@ -16,10 +16,52 @@ function App() {
     const { quizId } = useParams();
     const [users, setUsers] = useState("0")
     const [userList, setUserList] = useState<Users[]>([])
+    const startBtn = useRef<HTMLButtonElement | null>(null);
+
+    const isRoomAvailable = async () => {
+        try {
+            const response = await fetch(`http://localhost:3000/api/isQuizCodeAvailable`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code: quizId }),
+            });
+
+            if (!response.ok) {
+                window.location.href = `/`;
+                return;
+            }
+
+            const data = await response.json();
+            if (!data.success || !data.available) {
+                window.location.href = `/`;
+            }
+        } catch (err) {
+            window.location.href = `/`;
+        }
+    };
+    
+    useEffect(() => {
+        isRoomAvailable();
+        setUserList([]);
+    }, [])
 
     useEffect(() => {
         socket.emit("adminCon", { quizId: JSON.stringify(quizId), auth: localStorage.getItem("user")})
     }, [])
+
+    window.addEventListener("beforeunload", async () => {
+        try {
+          fetch(`http://localhost:3000/api/endQuiz`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: quizId })
+          });           
+        } catch (e) {
+            console.error('Error fetching quizzes', e);
+        }
+    });
 
     socket.on("joinError", () => {
         window.location.href = `/`
@@ -35,6 +77,8 @@ function App() {
 
     const Start = () =>{
         socket.emit("startRoom", JSON.stringify(quizId))
+        startBtn.current?.setAttribute("disabled", "true");
+        startBtn.current!.classList.add("opacity-50", "cursor-not-allowed");
     }
 
     const Next = () =>{
@@ -48,8 +92,12 @@ function App() {
                 <div className="flex justify-between items-center mb-6">
                     <div className='flex justify-between w-full'>
                         <h2 className="text-2xl font-extrabold text-blue-700 flex items-center">Quiz Lobby</h2>
+                        <p className="font-medium flex items-center text-blue-700 font-semibold cursor-pointer" 
+                           onClick={() => quizId && navigator.clipboard.writeText(`http://localhost:5173/broadcast/${quizId}`)}>
+                            Boradcast Link 📋
+                        </p>
                         <p className="text-gray-500 font-medium flex items-center">
-                            ID: <span className="text-blue-700 font-semibold cursor-pointer" onClick={() => quizId && navigator.clipboard.writeText(quizId)}>{quizId} 📋</span>
+                            Join Code: <span className="text-blue-700 font-semibold cursor-pointer pl-1" onClick={() => quizId && navigator.clipboard.writeText(quizId)}>{quizId} 📋</span>
                         </p>
                         <Link
                             to="/"
@@ -67,14 +115,15 @@ function App() {
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <button
+                    ref={startBtn}
                     onClick={() => Start()}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow transition"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow transition cursor-pointer"
                     >
                     Start Quiz
                     </button>
                     <button
                     onClick={() => Next()}
-                    className="bg-white border-2 border-blue-600 hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-lg font-semibold transition"
+                    className="bg-white border-2 border-blue-600 hover:bg-blue-50 text-blue-700 px-6 py-3 rounded-lg font-semibold transition cursor-pointer"
                     >
                     Next Question
                     </button>
@@ -87,7 +136,7 @@ function App() {
                 </h3>
 
                 <div className="divide-y divide-blue-100">
-                    {userList //leader board reset
+                    {userList
                     .sort((a, b) => b.score - a.score)
                     .map((p, index) => (
                         <div
@@ -105,7 +154,7 @@ function App() {
             </div> 
             </main>
             <footer className="text-center py-6 text-gray-500 text-sm bg-blue-50 border-t border-blue-100">
-                © {new Date().getFullYear()} QuizParty — Made by *
+                © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href='https://github.com/KoZsombat?'> Zsombor</a>
             </footer>
         </div>
     )

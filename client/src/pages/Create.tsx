@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useState} from 'react'
 import { Link } from 'react-router-dom'
 import useCheckLogin from '../scripts/useCheckLogin';
 import Alert from '../components/Alert.tsx'
@@ -16,14 +16,6 @@ function App() {
     const [code, setCode] = useState<string>('');
     const [visibility, setVisibility] = useState<"public" | "private">("public");
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-    useEffect(() => {
-      if (errorMsg != null){
-        setTimeout(() => {
-          setErrorMsg(null)
-        }, 3000);
-      }
-    }, [errorMsg]);
 
     const handleDelete = (questionToDelete: string) => {
         setCreatedQuestions((prevQuestions) => 
@@ -80,7 +72,7 @@ function App() {
         </header>
 
         <main className="space-y-6">
-          {errorMsg && <Alert error={errorMsg} />}
+          {errorMsg && <Alert error={errorMsg} onClose={() => setErrorMsg(null)}/>}
 
           <section>
             <h2 className="text-lg font-semibold text-blue-700 mb-4">Questions ({createdquietions.length})</h2>
@@ -189,7 +181,7 @@ function App() {
 
                 <div className="flex justify-end">
                   <button
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg px-5 py-3 shadow-md transition transform hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg px-5 py-3 shadow-md transition transform hover:-translate-y-0.5 cursor-pointer"
                     type="submit"
                   >
                     Add Question
@@ -227,14 +219,14 @@ function App() {
 
                 <div className="flex justify-end gap-3">
                   <button
-                    className="bg-white text-blue-600 border border-blue-100 px-5 py-2 rounded-lg shadow-sm hover:bg-blue-50 transition"
+                    className="bg-white text-blue-600 border border-blue-100 px-5 py-2 rounded-lg shadow-sm hover:bg-blue-50 transition cursor-pointer"
                     onClick={() => { setCreatedQuestions([]); }}
                     type="button"
                   >
                     Clear
                   </button>
                   <button
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg px-6 py-3 shadow-md transition transform hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg px-6 py-3 shadow-md transition transform hover:-translate-y-0.5 cursor-pointer"
                     onClick={handleSaveQuiz}
                     type="button"
                   >
@@ -248,7 +240,7 @@ function App() {
       </div>
     </div>
     <footer className="text-center py-6 text-gray-500 text-sm bg-blue-50 border-t border-blue-100">
-        © {new Date().getFullYear()} QuizParty — Made by *
+        © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href='https://github.com/KoZsombat?'> Zsombor</a>
     </footer>
     </>
   );

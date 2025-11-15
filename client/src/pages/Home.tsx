@@ -27,7 +27,7 @@ function App() {
                 <span className="hidden sm:block font-medium text-white/90">{user}</span>
                 <button
                 onClick={handleLogout}
-                className="bg-blue-800 hover:bg-blue-900 px-4 py-2 rounded-full transition font-semibold"
+                className="bg-blue-800 hover:bg-blue-900 px-4 py-2 rounded-full transition font-semibold cursor-pointer"
                 >
                 Logout
                 </button>
@@ -35,7 +35,7 @@ function App() {
             ) : (
             <Link
                 to="/login"
-                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full transition font-semibold"
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full transition font-semibold cursor-pointer"
             >
                 Login
             </Link>
@@ -107,7 +107,7 @@ function App() {
         </main>
 
         <footer className="text-center py-6 text-gray-500 text-sm bg-blue-50 border-t border-blue-100">
-            © {new Date().getFullYear()} QuizParty — Made by *
+            © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href='https://github.com/KoZsombat?'> Zsombor</a>
         </footer>
         </div>
     );

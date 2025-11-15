@@ -98,8 +98,8 @@ module.exports = function quizSocketHandler(io) {
 
     socket.on("nextTrigger", (roomId) =>{
       const rIndex = roomList.findIndex(r => r.roomId === roomId)
-      io.to(roomId).emit("next", (roomList[rIndex].globalIndex))
       roomList[rIndex].globalIndex += 1
+      io.to(roomId).emit("next", (roomList[rIndex].globalIndex))
     })
 
     socket.on("endOfQuiz", (roomId) => {

@@ -10,14 +10,6 @@ function App() {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const btn = useRef<HTMLButtonElement>(null)
 
-    useEffect(() => {
-      if (errorMsg != null){
-        setTimeout(() => {
-          setErrorMsg(null)
-        }, 3000);
-      }
-    }, [errorMsg]);
-
     const isRoomAvailable = async () => {
         try {
             const response = await fetch(`http://localhost:3000/api/isQuizCodeAvailable`, {
@@ -75,7 +67,7 @@ function App() {
     <>
     <div className="flex-1 w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100">
         <div className="w-full max-w-md bg-white rounded-3xl shadow-lg border border-blue-100 p-8">
-            {errorMsg && <Alert error={errorMsg} />}
+            {errorMsg && <Alert error={errorMsg} onClose={() => setErrorMsg(null)} />}
 
             <p className="text-center text-sm text-gray-500 mb-6">
             Quiz ID: <span className="font-semibold text-blue-700">{quizId}</span>
@@ -97,7 +89,7 @@ function App() {
             <button
                 ref={btn}
                 onClick={readyUp}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all cursor-pointer"
             >
                 Ready Up
             </button>

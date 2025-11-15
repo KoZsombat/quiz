@@ -61,7 +61,7 @@ function App() {
       const i = index;
       const opt = optionRef.current;
 
-      if (opt === qs[i].answer) {
+      if (opt === qs[i-1].answer) {
         socket.emit("correctAns", localStorage.getItem("username"));
       }
 
@@ -80,7 +80,7 @@ function App() {
 
       setOption("");
 
-      if (i === qs.length - 1) {
+      if (i === qs.length) {
         setShowScoreboard(true)
         localStorage.removeItem("username")
         socket.emit("endOfQuiz", quizId)
@@ -132,7 +132,7 @@ function App() {
         className="grid grid-cols-1 sm:grid-cols-2 gap-4"
         ref={div}
       >
-        {questions[index].options.map((option, i) => { //az elso kerdest irja ki ketszer es ha jol megvalaszolja ketszer ugyan ugy 1 pontot kap
+        {questions[index].options.map((option, i) => {
           const isSelected = soption === option;
           const isCorrect = option === questions[index].answer;
 
@@ -141,7 +141,7 @@ function App() {
               key={i}
               ref={isCorrect ? correct : null}
               onClick={() => handleOptionClick(option)}
-              className={`p-5 rounded-xl text-lg font-semibold shadow-sm border transition-all duration-200
+              className={`p-5 rounded-xl text-lg font-semibold shadow-sm border transition-all duration-200 cursor-pointer
                 ${
                   isSelected
                     ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-700'
