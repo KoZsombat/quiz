@@ -1,18 +1,27 @@
-//const { data } = require("react-router-dom");
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
 
-module.exports = function quizSocketHandler(io) {
+export default function quizSocketHandler(io) {
 
   const roomUsers = [];
   const roomList = []
 
   io.on("connection", (socket) => {
     socket.on("joinRoom", (data) => {
+      var name = "";
+
+      try {
+          const decoded = jwt.verify(data.name, process.env.JWT_SECRET);
+          name = decoded.name;
+      } catch (err) {console.log(err); return}
+
       if (!roomList.some(r => r.roomId == data.roomId)) return
       socket.join(data.roomId);
-      if (!roomUsers.some(p => p.username === data.name && p.roomId === data.roomId)) {
-        roomUsers.push({ roomId: data.roomId, userId: socket.id, username: data.name, score: 0 }); // use jwt auth instead of username
+      if (!roomUsers.some(p => p.username === name && p.roomId === data.roomId)) {
+        roomUsers.push({ roomId: data.roomId, userId: socket.id, username: name, score: 0 });
         const rIndex = roomList.findIndex(r => r.roomId === data.roomId);
-        roomList[rIndex].users.push(data.name)
+        roomList[rIndex].users.push(name)
       } else {
         io.to(socket.id).emit("nameExist");
       }
@@ -21,6 +30,7 @@ module.exports = function quizSocketHandler(io) {
 
     socket.on("adminCon", (data) => {
       socket.join(data.quizId)
+
       if (!data.auth) io.to(socket.id).emit("joinError");
       if (!roomList.some(r => r.roomId == data.quizId)) 
         roomList.push({ roomId: data.quizId, isStarted: false, globalIndex: 0, users: [], auth: data.auth})
@@ -38,7 +48,14 @@ module.exports = function quizSocketHandler(io) {
     socket.on("userCon", (data) => {
       if (!roomList.some(r => r.roomId == data.roomId)) return
 
-      const { roomId, name } = data;
+      var name = "";
+
+      try {
+          const decoded = jwt.verify(data.name, process.env.JWT_SECRET);
+          name = decoded.name;
+      } catch (err) {return}
+
+      const roomId = data.roomId;
 
       const alreadyInRoom = roomUsers.some(u => u.username === name && u.roomId === roomId);
 
@@ -61,6 +78,15 @@ module.exports = function quizSocketHandler(io) {
 
       io.to(roomId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId === roomId).length });
     });
+
+    socket.on("setUsername", (data) => {
+      const token = jwt.sign(
+        { name: data.name },
+        process.env.JWT_SECRET,
+        { expiresIn: '2h' }
+      );
+      io.to(socket.id).emit("recieveUsername", token);
+    })
 
     socket.on("startRoom", (roomId) => {
       io.to(roomId).emit("startQuiz")
@@ -87,11 +113,19 @@ module.exports = function quizSocketHandler(io) {
     })
 
     socket.on("correctAns", (username) => {
-      const uIndex = roomUsers.findIndex(u => u.username == username)
+
+      var name = "";
+
+      try {
+          const decoded = jwt.verify(username, process.env.JWT_SECRET);
+          name = decoded.name;
+      } catch (err) {return}
+
+      const uIndex = roomUsers.findIndex(u => u.username == name)
       if (uIndex !== -1) {
         roomUsers[uIndex].score += 1;
       } else {
-        console.warn(`User not found in roomUsers: ${username}`);
+        console.warn(`User not found in roomUsers: ${name}`);
       }
       io.to(roomUsers[uIndex].roomId).emit("scoreboardUpdate", (roomUsers))
     })

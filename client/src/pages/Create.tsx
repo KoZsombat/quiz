@@ -32,8 +32,7 @@ function App() {
             setErrorMsg("Please enter a room code.");
             return;
         }
-        fetch
-        ('http://localhost:3000/api/saveQuiz', {
+        fetch ('http://localhost:3000/api/saveQuiz', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

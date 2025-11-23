@@ -6,7 +6,7 @@ import Socket from '../scripts/useSocket.ts'
 function App() {
     const socket = Socket;
     const { quizId } = useParams();
-    const username = useRef<string | null>(localStorage.getItem("username"));
+    const username = useRef<string | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const btn = useRef<HTMLButtonElement>(null)
 
@@ -40,9 +40,12 @@ function App() {
 
     const readyUp = () => {
         setErrorMsg(null)
-        socket.emit('joinRoom', { roomId: JSON.stringify(quizId), name: username.current });
         if (username.current) {
-            localStorage.setItem("username", username.current);
+            socket.emit('setUsername', { name: username.current });
+            socket.on('recieveUsername', (data: string) => {
+                localStorage.setItem("username", data);
+        })
+        socket.emit('joinRoom', { roomId: JSON.stringify(quizId), name: localStorage.getItem("username") });
         }
         if (btn.current) {
             btn.current.setAttribute("disabled", "true")
@@ -81,7 +84,6 @@ function App() {
             <input
                 type="text"
                 placeholder="Enter your username"
-                defaultValue={username.current ? username.current : ''}
                 onChange={(e) => (username.current = e.target.value)}
                 className="w-full border border-blue-200 rounded-lg px-4 py-3 mb-5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             />

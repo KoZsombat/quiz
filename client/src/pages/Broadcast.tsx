@@ -3,9 +3,9 @@ import { useParams } from "react-router-dom";
 import ScoreBoard from '../components/Scoreboard.tsx'
 import Socket from '../scripts/useSocket.ts'
 
-function App() {
+function App(viewId: any | null) {
   const socket = Socket;
-  const { quizId } = useParams(); 
+  const quizId = useParams() ?? viewId;
   const [index, setIndex] = useState(0)
   const questionsRef = useRef<Question[]>([]);
   const [userList, setUserList] = useState<Users[]>([]);

@@ -53,7 +53,7 @@ function App() {
 
                 <div className="flex flex-col sm:flex-row gap-6 justify-center pb-5">
                     <input 
-                    className="w-120 px-6 py-4 border border-blue-100 rounded-lg text-center focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                    className="w-full px-6 py-4 border border-blue-100 rounded-lg text-center focus:ring-2 focus:ring-blue-400 focus:outline-none"
                     type="text" 
                     value={joinCode} 
                     onChange={(e) => setJoinCode(e.target.value)} 
@@ -89,7 +89,7 @@ function App() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-6 justify-center pb-5">
                     <input 
-                    className="w-120 px-6 py-4 border border-blue-100 rounded-lg text-center focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                    className="w-full px-6 py-4 border border-blue-100 rounded-lg text-center focus:ring-2 focus:ring-blue-400 focus:outline-none"
                     type="text" 
                     value={joinCode} 
                     onChange={(e) => setJoinCode(e.target.value)} 

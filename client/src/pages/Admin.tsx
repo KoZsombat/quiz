@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Link } from 'react-router-dom'
 import Socket from '../scripts/useSocket.ts'
+import Broadcast from "./Broadcast.tsx";
 
 function App() {
     const socket = Socket;
@@ -90,7 +91,7 @@ function App() {
             <main className="flex-grow flex items-start justify-center py-12 px-4">
             <div className="w-full max-w-3xl bg-white rounded-3xl shadow-lg border border-blue-100 p-8">
                 <div className="flex justify-between items-center mb-6">
-                    <div className='flex justify-between w-full'>
+                    <div className='flex justify-between w-full'> {/* Fix flex issue */}
                         <h2 className="text-2xl font-extrabold text-blue-700 flex items-center">Quiz Lobby</h2>
                         <p className="font-medium flex items-center text-blue-700 font-semibold cursor-pointer" 
                            onClick={() => quizId && navigator.clipboard.writeText(`http://localhost:5173/broadcast/${quizId}`)}>
@@ -108,7 +109,7 @@ function App() {
                     </div>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8 text-center shadow-sm">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-4 text-center shadow-sm">
                 <p className="text-lg font-semibold text-blue-800 mb-4">
                     👥 Players Joined: <span className="text-blue-700 font-bold">{users}</span>
                 </p>
@@ -130,26 +131,34 @@ function App() {
                 </div>
                 </div>
 
-                <div className="bg-white/80 rounded-xl border border-blue-100 shadow-inner p-6">
-                <h3 className="text-xl font-bold text-blue-700 mb-4 text-center">
-                    🏆 Leaderboard
-                </h3>
+                <div className="bg-white/80 rounded-xl border border-blue-100 shadow-inner p-6 mb-2">
+                    <h3 className="text-xl font-bold text-blue-700 mb-4 text-center">
+                        📡 Live Broadcast
+                    </h3>
 
-                <div className="divide-y divide-blue-100">
-                    {userList
-                    .sort((a, b) => b.score - a.score)
-                    .map((p, index) => (
-                        <div
-                        key={p.username}
-                        className="flex justify-between py-2 px-3 hover:bg-blue-50 rounded-lg transition"
-                        >
-                        <span className="font-medium text-gray-800">
-                            {index + 1}. {p.username}
-                        </span>
-                        <span className="font-semibold text-blue-700">{p.score} pts</span>
-                        </div>
-                    ))}
+                    <Broadcast viewId={quizId}/> {/*Fix*/}
                 </div>
+
+                <div className="bg-white/80 rounded-xl border border-blue-100 shadow-inner p-6">
+                    <h3 className="text-xl font-bold text-blue-700 mb-4 text-center">
+                        🏆 Leaderboard
+                    </h3>
+
+                    <div className="divide-y divide-blue-100">
+                        {userList
+                        .sort((a, b) => b.score - a.score)
+                        .map((p, index) => (
+                            <div
+                            key={p.username}
+                            className="flex justify-between py-2 px-3 hover:bg-blue-50 rounded-lg transition"
+                            >
+                            <span className="font-medium text-gray-800">
+                                {index + 1}. {p.username}
+                            </span>
+                            <span className="font-semibold text-blue-700">{p.score} pts</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div> 
             </main>

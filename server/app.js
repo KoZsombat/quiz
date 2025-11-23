@@ -7,9 +7,11 @@ import { Server } from "socket.io";
 import quizSocketHandler from "./src/quiz_socket.js";
 import quizExpressHandler from "./src/quiz_express.js";
 import loginHandler from "./src/login.js";
+import dotenv from "dotenv";
+dotenv.config();
 
-// jwt token, .env for jwt and db and cors and api ip address on frontend, mobile responsive design
-// quiz question time limit
+// admin ui, broadcast view nem mukodik
+// refreshnél elso kerdere dobja a jatekost, admin ui rossz a leader board minden jatekost egybe dob nem clearelodik, nem ad pontot tobb quiznel
 
 const app = express();
 
@@ -17,7 +19,7 @@ const server = http.createServer(app);
 const port = 3000
 
 app.use(cors({
-  origin: "*",
+  origin: process.env.CORS_ORIGIN,
   methods: ["GET", "POST"],
 }))
 app.use(helmet());
@@ -25,7 +27,7 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: process.env.CORS_ORIGIN,
     methods: ["GET", "POST"],
   },
 });
