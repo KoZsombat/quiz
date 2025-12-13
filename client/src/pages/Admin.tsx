@@ -49,7 +49,7 @@ function App() {
     }, [])
 
     useEffect(() => {
-        socket.emit("adminCon", { quizId: JSON.stringify(quizId), auth: localStorage.getItem("user")})
+        socket.emit("adminCon", { quizId: quizId, auth: localStorage.getItem("user")})
     }, [])
 
     window.addEventListener("beforeunload", async () => {
@@ -77,13 +77,13 @@ function App() {
     })
 
     const Start = () =>{
-        socket.emit("startRoom", JSON.stringify(quizId))
+        socket.emit("startRoom", quizId)
         startBtn.current?.setAttribute("disabled", "true");
         startBtn.current!.classList.add("opacity-50", "cursor-not-allowed");
     }
 
     const Next = () =>{
-        socket.emit("nextTrigger", JSON.stringify(quizId))
+        socket.emit("nextTrigger", quizId)
     }
 
     return (

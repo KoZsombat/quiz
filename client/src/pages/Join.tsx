@@ -45,7 +45,7 @@ function App() {
             socket.on('recieveUsername', (data: string) => {
                 localStorage.setItem("username", data);
         })
-        socket.emit('joinRoom', { roomId: JSON.stringify(quizId), name: localStorage.getItem("username") });
+        socket.emit('joinRoom', { roomId: quizId, name: localStorage.getItem("username") });
         }
         if (btn.current) {
             btn.current.setAttribute("disabled", "true")

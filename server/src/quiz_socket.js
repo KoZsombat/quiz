@@ -9,14 +9,22 @@ export default function quizSocketHandler(io) {
 
   io.on("connection", (socket) => {
     socket.on("joinRoom", (data) => {
-      var name = "";
+      if (!data || !data.name || !data.roomId) {
+        io.to(socket.id).emit("joinError");
+        return;
+      }
 
+      let name = "";
       try {
-          const decoded = jwt.verify(data.name, process.env.JWT_SECRET);
-          name = decoded.name;
-      } catch (err) {console.log(err); return}
+        const decoded = jwt.verify(data.name, process.env.JWT_SECRET);
+        name = decoded.name;
+      } catch (err) {
+        console.log("joinRoom token error:", err);
+        io.to(socket.id).emit("joinError");
+        return;
+      }
 
-      if (!roomList.some(r => r.roomId == data.roomId)) return
+      if (!roomList.some(r => r.roomId == data.roomId)) return;
       socket.join(data.roomId);
       if (!roomUsers.some(p => p.username === name && p.roomId === data.roomId)) {
         roomUsers.push({ roomId: data.roomId, userId: socket.id, username: name, score: 0 });
@@ -31,13 +39,25 @@ export default function quizSocketHandler(io) {
     socket.on("adminCon", (data) => {
       socket.join(data.quizId)
 
+      let name = "";
+        try {
+          const decoded = jwt.verify(data.auth, process.env.JWT_SECRET);
+          name = decoded.name;
+        } catch (err) {
+          console.log("joinRoom token error:", err);
+          io.to(socket.id).emit("joinError");
+          return;
+        }
+
       if (!data.auth) io.to(socket.id).emit("joinError");
       if (!roomList.some(r => r.roomId == data.quizId)) 
-        roomList.push({ roomId: data.quizId, isStarted: false, globalIndex: 0, users: [], auth: data.auth})
-      else if (roomList.some(r => r.roomId == data.quizId && r.auth !== data.auth))
+        roomList.push({ roomId: data.quizId, isStarted: false, globalIndex: 0, users: [], auth: name})
+      else if (roomList.some(r => r.roomId == data.quizId && r.auth !== name))
         io.to(socket.id).emit("joinError");
+      socket.join(data.quizId)
       io.to(data.quizId).emit("usersUpdate", { count: roomUsers.filter(user => user.roomId == data.quizId).length || 0});
-      io.to(data.quizId).emit("scoreboardUpdate", (roomUsers))
+      const usersinRoom = roomUsers.filter(user => user.roomId == data.quizId)
+      io.to(data.quizId).emit("scoreboardUpdate", (usersinRoom))
     })
 
     socket.on("broadcastCon", (data) => {
@@ -90,11 +110,12 @@ export default function quizSocketHandler(io) {
 
     socket.on("startRoom", (roomId) => {
       io.to(roomId).emit("startQuiz")
-      io.to(roomId).emit("scoreboardUpdate", (roomUsers))
+      const usersinRoom = roomUsers.filter(user => user.roomId == roomId)
+      io.to(roomId).emit("scoreboardUpdate", (usersinRoom))
     })
 
     socket.on("getQuiestions", async (roomId) => {
-      if (!roomList.some(r => r.roomId == JSON.stringify(roomId))) return
+      if (!roomList.some(r => r.roomId == roomId)) return
       socket.join(roomId)
       const response = await fetch(`http://localhost:3000/api/getQuiz/`, {
         method: 'POST',
@@ -110,24 +131,30 @@ export default function quizSocketHandler(io) {
         data = { err };
       }
       io.to(roomId).emit("sendQuestions", data)
+      console.log("Questions sent to room:", roomId);
+      console.log(roomList);
+      const rIndex = roomList.findIndex(r => r.roomId === roomId)
+      console.log(rIndex);
+      io.to(socket.id).emit("setIndex", (roomList[rIndex].globalIndex))
     })
 
-    socket.on("correctAns", (username) => {
+    socket.on("correctAns", (data) => {
 
       var name = "";
 
       try {
-          const decoded = jwt.verify(username, process.env.JWT_SECRET);
+          const decoded = jwt.verify(data.username, process.env.JWT_SECRET);
           name = decoded.name;
       } catch (err) {return}
 
-      const uIndex = roomUsers.findIndex(u => u.username == name)
+      const uIndex = roomUsers.findIndex(u => u.username == name && u.roomId == data.roomId);
       if (uIndex !== -1) {
         roomUsers[uIndex].score += 1;
       } else {
         console.warn(`User not found in roomUsers: ${name}`);
       }
-      io.to(roomUsers[uIndex].roomId).emit("scoreboardUpdate", (roomUsers))
+      const usersinRoom = roomUsers.filter(user => user.roomId == roomUsers[uIndex].roomId)
+      io.to(roomUsers[uIndex].roomId).emit("scoreboardUpdate", (usersinRoom))
     })
 
     socket.on("nextTrigger", (roomId) =>{

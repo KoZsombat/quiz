@@ -11,7 +11,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // admin ui, broadcast view nem mukodik
-// refreshnél elso kerdere dobja a jatekost, admin ui rossz a leader board minden jatekost egybe dob nem clearelodik, nem ad pontot tobb quiznel
+// ELV JO: nem ad pontot tobb quiznel, 
+// minden 2. quiz inditasnal reloadolni kell a hostnak, 
+// ELV JO: tobb quiznel ha ugyan az a neve az embernek neki ad pontot es a masiknal nem irja ki az embert (nem tudja ellenőrizni hogy jó ember lép e be ezért kidobja)
 
 const app = express();
 

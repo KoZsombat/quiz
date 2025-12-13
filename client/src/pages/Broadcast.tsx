@@ -31,7 +31,7 @@ function App(viewId: any | null) {
     useEffect(() => { questionsRef.current = questions }, [questions]);
 
     useEffect(() => {
-      socket.emit("broadcastCon", { roomId: JSON.stringify(quizId)})
+      socket.emit("broadcastCon", { roomId: quizId})
     }, [])
 
     useEffect(() => {

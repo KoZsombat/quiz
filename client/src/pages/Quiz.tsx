@@ -29,7 +29,7 @@ function App() {
   }
 
   useEffect(() => {
-    socket.emit("userCon", { roomId: JSON.stringify(quizId), name: localStorage.getItem("username") });
+    socket.emit("userCon", { roomId: quizId, name: localStorage.getItem("username") });
   }, [])
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -47,6 +47,10 @@ function App() {
     }
   });
 
+  socket.on("setIndex", (data: number) => {
+    setIndex(data);
+  });
+
   socket.on("joinError", () => {
     window.location.href = `/`
   })
@@ -62,7 +66,7 @@ function App() {
       const opt = optionRef.current;
 
       if (opt === qs[i-1].answer) {
-        socket.emit("correctAns", localStorage.getItem("username"));
+        socket.emit("correctAns", { username: localStorage.getItem("username"), roomId: quizId });
       }
 
       const child = correct.current;
