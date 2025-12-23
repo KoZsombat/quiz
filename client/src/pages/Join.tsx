@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Alert from '../components/Alert.tsx'
 import Socket from '../scripts/useSocket.ts'
+import { isRoomAvailable } from "../scripts/useCheckRoom.ts";
 
 function App() {
     const socket = Socket;
@@ -10,32 +11,12 @@ function App() {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const btn = useRef<HTMLButtonElement>(null)
 
-    const isRoomAvailable = async () => {
-        try {
-            const response = await fetch(`http://localhost:3000/api/isQuizCodeAvailable`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ code: quizId }),
-            });
-
-            if (!response.ok) {
-                window.location.href = `/`;
-                return;
-            }
-
-            const data = await response.json();
-            if (!data.success || !data.available) {
-                window.location.href = `/`;
-            }
-        } catch (err) {
-            window.location.href = `/`;
-        }
-    };
-
     useEffect(() => {
-        isRoomAvailable();
+        isRoomAvailable(quizId!).then((available) => {
+            if (!available) {
+                window.location.href = `/`;
+            }
+        });
     }, [])
 
     const readyUp = () => {
@@ -44,8 +25,8 @@ function App() {
             socket.emit('setUsername', { name: username.current });
             socket.on('recieveUsername', (data: string) => {
                 localStorage.setItem("username", data);
-        })
-        socket.emit('joinRoom', { roomId: quizId, name: localStorage.getItem("username") });
+                socket.emit('joinRoom', { roomId: quizId, name: data });
+            });
         }
         if (btn.current) {
             btn.current.setAttribute("disabled", "true")

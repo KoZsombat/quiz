@@ -2,6 +2,8 @@ import { useState } from 'react';
 import Alert from '../components/Alert.tsx'
 
 function App() {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const githubUrl = import.meta.env.VITE_GITHUB_URL;
     const [showLogin, setShowLogin] = useState(true);
     const [loginName, setLoginName] = useState('');
     const [loginPass, setLoginPass] = useState('');
@@ -25,7 +27,7 @@ function App() {
                 password: loginPass,
             };
             try {
-            const response = await fetch(`http://localhost:3000/api/login`, {
+            const response = await fetch(`${apiUrl}/login`, {
                 method: 'POST',
                 headers: { 
                 'Content-Type': 'application/json'
@@ -65,7 +67,7 @@ function App() {
                     email: registerEmail,
                     password: registerPass,
                 };
-                const response = await fetch(`http://localhost:3000/api/register`, {
+                const response = await fetch(`${apiUrl}/register`, {
                     method: 'POST',
                     headers: 
                         { 
@@ -192,7 +194,7 @@ function App() {
             </div>
 
             <div className="px-6 py-4 bg-blue-50 border-t border-blue-100 text-center text-sm text-blue-600">
-            © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href='https://github.com/KoZsombat?'> Zsombor</a>
+            © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href={githubUrl}> Zsombor</a>
             </div>
         </div>
         </div>

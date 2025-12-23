@@ -28,8 +28,10 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `active` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `q_code` varchar(255) NOT NULL,
-  `q_url` varchar(255) NOT NULL
+  `q_url` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -39,12 +41,14 @@ CREATE TABLE `active` (
 --
 
 CREATE TABLE `quizzes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(255) NOT NULL,
   `author` varchar(255) NOT NULL,
   `isPublic` tinyint(1) NOT NULL,
   `question` varchar(255) NOT NULL,
   `options` varchar(255) NOT NULL,
-  `answer` varchar(255) NOT NULL
+  `answer` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -68,9 +72,11 @@ INSERT INTO `quizzes` (`code`, `author`, `isPublic`, `question`, `options`, `ans
 --
 
 CREATE TABLE `user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL
+  `password` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

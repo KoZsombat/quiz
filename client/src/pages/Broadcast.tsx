@@ -2,16 +2,22 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams } from "react-router-dom";
 import ScoreBoard from '../components/Scoreboard.tsx'
 import Socket from '../scripts/useSocket.ts'
+import { isRoomAvailable } from "../scripts/useCheckRoom.ts";
 
-function App(viewId: any | null) {
+interface BroadcastProps {
+  showScoreboard?: boolean;
+}
+
+function App({ showScoreboard = true }: BroadcastProps) {
   const socket = Socket;
-  const quizId = useParams() ?? viewId;
+  const { quizId } = useParams(); 
   const [index, setIndex] = useState(0)
   const questionsRef = useRef<Question[]>([]);
   const [userList, setUserList] = useState<Users[]>([]);
   const div = useRef<HTMLDivElement>(null);
   const correct = useRef<HTMLButtonElement | null>(null);
   const [isStarted, setIsStarted] = useState(false);
+  const [isOver, setIsOver] = useState(false);
 
   interface Users {
     roomId: string;
@@ -28,15 +34,30 @@ function App(viewId: any | null) {
 
   const [questions, setQuestions] = useState<Question[]>([]);
 
-    useEffect(() => { questionsRef.current = questions }, [questions]);
+  useEffect(() => {
+      isRoomAvailable(quizId!).then((available) => {
+          if (!available) {
+              window.location.href = `/`;
+          }
+      });
+  }, [])
 
-    useEffect(() => {
-      socket.emit("broadcastCon", { roomId: quizId})
-    }, [])
+  useEffect(() => {
+    socket.emit("broadcastCon", { roomId: quizId})
+    socket.on("tokenExpired", () => {
+      socket.emit("setUsername", { name: localStorage.getItem("user") });
+    });
+  }, [])
 
-    useEffect(() => {
-      socket.emit("getQuiestions", quizId)
-    }, [])
+  useEffect(() => {
+    socket.emit("getQuiestions", quizId)
+  }, [])
+
+  useEffect(() => { questionsRef.current = questions }, [questions]);
+
+  useEffect(() => {
+    console.info("Questions updated:", questions);
+  }, [questions]);
 
   socket.on("sendQuestions", (data) => {
     if (Array.isArray(data) && data.every(q => q.question && q.options && q.answer)) {
@@ -65,8 +86,10 @@ function App(viewId: any | null) {
       child.classList.remove("bg-green-500");
       child.classList.add("bg-blue-50");
 
-      if (i !== qs.length - 1) {
+      if (i !== qs.length) {
         setIndex(index);
+      } else {
+        setIsOver(true);
       }
     };
 
@@ -78,11 +101,14 @@ function App(viewId: any | null) {
     return <div className="p-4 text-center">Didn't find the quiz!</div>;
   }
 
-  socket.on("endOfQuiz", () => {
-    setIndex(1000);
-  });
-
-  if (index === questions.length || index === 1000) {
+  if (isOver) {
+    if (!showScoreboard) {
+      return (
+        <div>
+          <div className="p-4 text-center text-2xl font-extrabold text-blue-800">The quiz has ended!</div>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-50 flex flex-col items-center py-10 px-4">
         <ScoreBoard userList={userList} />
@@ -101,33 +127,54 @@ function App(viewId: any | null) {
 
   return (
     <>
-        <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-50 flex flex-col items-center py-10 px-4">
+        {showScoreboard ? (
+          <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-50 flex flex-col items-center py-10 px-4">
             <ScoreBoard userList={userList} />
             <div className="w-full max-w-3xl bg-white rounded-3xl shadow-lg border border-blue-100 p-8 mt-20">
-
-            <h2 className="text-2xl font-extrabold text-center text-blue-800 mb-6">
+              <h2 className="text-2xl font-extrabold text-center text-blue-800 mb-6">
                 {questions[index].question}
+              </h2>
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                ref={div}
+              >
+                {questions[index].options.map((option, i) => {
+                  const isCorrect = option === questions[index].answer;
+                  return (
+                    <button
+                      key={i}
+                      ref={isCorrect ? correct : null}
+                      className={`p-5 rounded-xl text-lg font-semibold shadow-sm border transition-all duration-200 bg-blue-50 border-blue-200 text-blue-800'`}>
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center w-full py-10">
+            <h2 className="font-bold text-2xl text-center mb-6 text-blue-800">
+              {questions[index].question}
             </h2>
-
             <div
                 className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                 ref={div}
-            >
+              >
                 {questions[index].options.map((option, i) => {
-                const isCorrect = option === questions[index].answer;
-
-                return (
+                  const isCorrect = option === questions[index].answer;
+                  return (
                     <button
-                    key={i}
-                    ref={isCorrect ? correct : null}
-                    className={`p-5 rounded-xl text-lg font-semibold shadow-sm border transition-all duration-200 bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-800'`}>
-                    {option}
+                      key={i}
+                      ref={isCorrect ? correct : null}
+                      className={`p-5 rounded-xl text-lg font-semibold shadow-sm border transition-all duration-200 bg-blue-50 border-blue-200 text-blue-800'`}>
+                      {option}
                     </button>
-                );
+                  );
                 })}
+              </div>
             </div>
-            </div>
-        </div>
+        )}
     </>
   )
 }

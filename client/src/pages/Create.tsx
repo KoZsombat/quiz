@@ -4,6 +4,8 @@ import useCheckLogin from '../scripts/useCheckLogin';
 import Alert from '../components/Alert.tsx'
 
 function App() {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  const githubUrl = import.meta.env.VITE_GITHUB_URL;
     const { username } = useCheckLogin();
 
     type Question = {
@@ -32,7 +34,7 @@ function App() {
             setErrorMsg("Please enter a room code.");
             return;
         }
-        fetch ('http://localhost:3000/api/saveQuiz', {
+        fetch (`${apiUrl}/saveQuiz`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -239,7 +241,7 @@ function App() {
       </div>
     </div>
     <footer className="text-center py-6 text-gray-500 text-sm bg-blue-50 border-t border-blue-100">
-        © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href='https://github.com/KoZsombat?'> Zsombor</a>
+        © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href={githubUrl}> Zsombor</a>
     </footer>
     </>
   );

@@ -3,43 +3,30 @@ import { randomBytes } from "crypto";
 
 function quizExpressHandler(app) {
 
-    app.post('/api/saveQuiz', (req, res) => {
-    const { array, code, author, visibility } = req.body
+    app.post('/api/saveQuiz', async (req, res) => {
+        const { array, code, author, visibility } = req.body;
+        const isPublic = visibility === "public" ? 1 : 0;
 
-    // if (!array.question || !array.options || !Array.isArray(array.options) || !array.answer || !code) {
-    //   return res.status(400).send('Invalid input');
-    // }
+        con.query('SELECT * FROM quizzes WHERE code = ?', code, async (err, results) => {
+            if (err) return res.status(500).send('Error checking quiz code');
+            if (results.length > 0) return res.status(400).send('Quiz with this code already exists');
 
-    const isPublic = visibility === "public" ? 1 : 0;
-
-    const query1 = 'Select * from quizzes where code = ?'
-    con.query(query1, code, (err, results) => {
-        if (err) {
-        return res.status(500).send('Error checking quiz code')
-        }
-        if (results.length > 0) {
-        return res.status(400).send('Quiz with this code already exists')
-        } else {
-        const query2 = 'INSERT INTO quizzes (code, author, isPublic, question, options, answer) VALUES (?, ?, ?, ?, ?, ?)'
-        let completed = 0
-        array.map(q => {
-            const params = [code, author, isPublic, q.question, JSON.stringify(q.options), q.answer]
-            con.query(query2, params, (err, result) => {
-            if (err) {
-                res.status(500).send('Error saving quiz')
-            } else {
-                completed++
-                if (completed === array.length && !res.headersSent) {
-                res.status(200).send('Quiz saved successfully')
-                }
+            try {
+            await Promise.all(array.map(q => {
+                return new Promise((resolve, reject) => {
+                const params = [code, author, isPublic, q.question, JSON.stringify(q.options), q.answer];
+                con.query('INSERT INTO quizzes (code, author, isPublic, question, options, answer) VALUES (?, ?, ?, ?, ?, ?)', params, (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+                });
+            }));
+            res.status(200).send('Quiz saved successfully');
+            } catch (err) {
+            res.status(500).send('Error saving quiz');
             }
-            })
-        })
-        }
-    })
-    })
-
-    // SELECT CONCAT( '[', GROUP_CONCAT( JSON_OBJECT( 'question', question, 'options', options, 'answer', answer ) ), ']' ) AS quiz FROM quizzes WHERE code = "1";
+        });
+    });
 
     app.post('/api/getQuizzes', (req, res) => {
     const { author } = req.body

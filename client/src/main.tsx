@@ -11,8 +11,6 @@ import Admin from './pages/Admin.tsx'
 import Broadcast from './pages/Broadcast.tsx'
 import './tailwind.css'
 
-// all functions into the script ts
-
 createRoot(document.getElementById('root')!).render(
     <Router>
       <Routes>

@@ -10,7 +10,7 @@ export default function Alert({ userList }: { userList: Users[] }) {
     const Users = userList;
 
     return (
-        <div className="flex justify-center items-start w-full fixed top-4 z-50 px-4">
+        <div className="flex justify-center items-start w-full pt-4 z-50 px-4">
             <div
                 className="bg-blue-600 border border-blue-700 text-white px-6 py-4 rounded-xl shadow-lg max-w-md w-full space-y-2"
                 role="alert"

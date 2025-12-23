@@ -5,6 +5,9 @@ import Socket from '../scripts/useSocket.ts'
 import Broadcast from "./Broadcast.tsx";
 
 function App() {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const githubUrl = import.meta.env.VITE_GITHUB_URL;
+    const url = import.meta.env.VITE_URL;
     const socket = Socket;
 
     interface Users {
@@ -21,7 +24,7 @@ function App() {
 
     const isRoomAvailable = async () => {
         try {
-            const response = await fetch(`http://localhost:3000/api/isQuizCodeAvailable`, {
+            const response = await fetch(`${apiUrl}/isQuizCodeAvailable`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -49,12 +52,25 @@ function App() {
     }, [])
 
     useEffect(() => {
-        socket.emit("adminCon", { quizId: quizId, auth: localStorage.getItem("user")})
+        let jwt = localStorage.getItem("username");
+        if (!jwt) {
+            const user = localStorage.getItem("user") || "Guest";
+            socket.emit("setUsername", { name: user });
+            socket.on("recieveUsername", (token) => {
+                localStorage.setItem("username", token);
+                socket.emit("adminCon", { quizId: quizId, auth: token });
+            });
+        } else {
+            socket.emit("adminCon", { quizId: quizId, auth: jwt });
+        }
+        socket.on("tokenExpired", () => {
+            socket.emit("setUsername", { name: localStorage.getItem("user") || "Guest" });
+        });
     }, [])
 
     window.addEventListener("beforeunload", async () => {
         try {
-          fetch(`http://localhost:3000/api/endQuiz`, {
+          fetch(`${apiUrl}/endQuiz`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ url: quizId })
@@ -91,10 +107,10 @@ function App() {
             <main className="flex-grow flex items-start justify-center py-12 px-4">
             <div className="w-full max-w-3xl bg-white rounded-3xl shadow-lg border border-blue-100 p-8">
                 <div className="flex justify-between items-center mb-6">
-                    <div className='flex justify-between w-full'> {/* Fix flex issue */}
+                    <div className='flex justify-between w-full'>
                         <h2 className="text-2xl font-extrabold text-blue-700 flex items-center">Quiz Lobby</h2>
                         <p className="font-medium flex items-center text-blue-700 font-semibold cursor-pointer" 
-                           onClick={() => quizId && navigator.clipboard.writeText(`http://localhost:5173/broadcast/${quizId}`)}>
+                           onClick={() => quizId && navigator.clipboard.writeText(`${url}/broadcast/${quizId}`)}>
                             Boradcast Link 📋
                         </p>
                         <p className="text-gray-500 font-medium flex items-center">
@@ -131,12 +147,11 @@ function App() {
                 </div>
                 </div>
 
-                <div className="bg-white/80 rounded-xl border border-blue-100 shadow-inner p-6 mb-2">
+                <div className="bg-white/80 rounded-xl border border-blue-100 shadow-inner p-6 mb-2 max-h-96 overflow-y-auto">
                     <h3 className="text-xl font-bold text-blue-700 mb-4 text-center">
                         📡 Live Broadcast
                     </h3>
-
-                    <Broadcast viewId={quizId}/> {/*Fix*/}
+                    <Broadcast showScoreboard={false}/>
                 </div>
 
                 <div className="bg-white/80 rounded-xl border border-blue-100 shadow-inner p-6">
@@ -163,7 +178,7 @@ function App() {
             </div> 
             </main>
             <footer className="text-center py-6 text-gray-500 text-sm bg-blue-50 border-t border-blue-100">
-                © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href='https://github.com/KoZsombat?'> Zsombor</a>
+                © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href={githubUrl}> Zsombor</a>
             </footer>
         </div>
     )

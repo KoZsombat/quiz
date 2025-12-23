@@ -2,8 +2,10 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams } from "react-router-dom";
 import ScoreBoard from '../components/Scoreboard.tsx'
 import Socket from '../scripts/useSocket.ts'
+import { isRoomAvailable } from "../scripts/useCheckRoom.ts";
 
 function App() {
+  const apiUrl = import.meta.env.VITE_API_URL;
   const socket = Socket;
   const { quizId } = useParams(); 
   const [index, setIndex] = useState(0)
@@ -29,7 +31,19 @@ function App() {
   }
 
   useEffect(() => {
-    socket.emit("userCon", { roomId: quizId, name: localStorage.getItem("username") });
+      isRoomAvailable(quizId!).then((available) => {
+          if (!available) {
+              window.location.href = `/`;
+          }
+      });
+  }, [])
+
+  useEffect(() => {
+    const jwt = localStorage.getItem("username");
+    socket.emit("userCon", { roomId: quizId, name: jwt });
+    socket.on("tokenExpired", () => {
+      socket.emit("setUsername", { name: localStorage.getItem("user") || "Guest" });
+    });
   }, [])
 
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -89,7 +103,7 @@ function App() {
         localStorage.removeItem("username")
         socket.emit("endOfQuiz", quizId)
         try {
-          fetch(`http://localhost:3000/api/endQuiz`, {
+          fetch(`${apiUrl}/endQuiz`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ url: quizId })

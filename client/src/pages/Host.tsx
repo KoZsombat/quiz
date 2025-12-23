@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import useCheckLogin from '../scripts/useCheckLogin.ts'
 
 function App() {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const githubUrl = import.meta.env.VITE_GITHUB_URL;
     const { logged, username } = useCheckLogin();
     const [user] = useState<string | null>(username);
     const [loggedIn] = useState(logged);
@@ -28,7 +30,7 @@ function App() {
 
     const fetchQuizzes = async () => {
         try {
-            const response = await fetch(`http://localhost:3000/api/getQuizzes`, {
+            const response = await fetch(`${apiUrl}/getQuizzes`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ author: user })
@@ -44,7 +46,7 @@ function App() {
 
     const StartQuiz = async (title: string) => {
         try {
-            const response = await fetch(`http://localhost:3000/api/startQuiz`, {
+            const response = await fetch(`${apiUrl}/startQuiz`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: title })
@@ -150,7 +152,7 @@ function App() {
             </div> 
             </main>
             <footer className="text-center py-6 text-gray-500 text-sm bg-blue-50 border-t border-blue-100">
-                © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href='https://github.com/KoZsombat?'> Zsombor</a>
+                © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href={githubUrl}> Zsombor</a>
             </footer>
            </div>
         );

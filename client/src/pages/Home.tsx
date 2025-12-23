@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import useCheckLogin from '../scripts/useCheckLogin.ts'
 
 function App() {
+    const githubUrl = import.meta.env.VITE_GITHUB_URL;
     const { logged, username } = useCheckLogin();
     const user = username?.replace(/"/g, '');
     const [loggedIn, setLoggedIn] = useState(logged);
@@ -107,7 +108,7 @@ function App() {
         </main>
 
         <footer className="text-center py-6 text-gray-500 text-sm bg-blue-50 border-t border-blue-100">
-            © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href='https://github.com/KoZsombat?'> Zsombor</a>
+            © {new Date().getFullYear()} QuizParty — Made by <a className="text-blue-700 cursor-pointer font-bold" target='_blank' href={githubUrl}> Zsombor</a>
         </footer>
         </div>
     );
