@@ -1,86 +1,87 @@
-import { useRef, useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import Alert from '../components/Alert.tsx'
-import Socket from '../scripts/useSocket.ts'
-import { isRoomAvailable } from "../scripts/useCheckRoom.ts";
+import { useRef, useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import Alert from '../components/Alert.tsx';
+import Socket from '../scripts/useSocket.ts';
+import { isRoomAvailable } from '../scripts/useCheckRoom.ts';
 
 function App() {
-    const socket = Socket;
-    const { quizId } = useParams();
-    const username = useRef<string | null>(null);
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const btn = useRef<HTMLButtonElement>(null)
+  const socket = Socket;
+  const { quizId } = useParams();
+  const username = useRef<string | null>(null);
+  const [alertMsg, setAlertMsg] = useState<string | null>(null);
+  const btn = useRef<HTMLButtonElement>(null);
 
-    useEffect(() => {
-        isRoomAvailable(quizId!).then((available) => {
-            if (!available) {
-                window.location.href = `/`;
-            }
-        });
-    }, [])
+  useEffect(() => {
+    isRoomAvailable(quizId!).then((available) => {
+      if (!available) {
+        setAlertMsg('The room is not available or does not exist.');
+        setTimeout(() => (window.location.href = `/`), 2000);
+      }
+    });
+  }, []);
 
-    const readyUp = () => {
-        setErrorMsg(null)
-        if (username.current) {
-            socket.emit('setUsername', { name: username.current });
-            socket.on('recieveUsername', (data: string) => {
-                localStorage.setItem("username", data);
-                socket.emit('joinRoom', { roomId: quizId, name: data });
-            });
-        }
-        if (btn.current) {
-            btn.current.setAttribute("disabled", "true")
-        }
+  const readyUp = () => {
+    setAlertMsg(null);
+    if (username.current) {
+      socket.emit('setUsername', { name: username.current });
+      socket.on('recieveUsername', (data: string) => {
+        localStorage.setItem('username', data);
+        socket.emit('joinRoom', { roomId: quizId, name: data });
+      });
     }
+    if (btn.current) {
+      btn.current.setAttribute('disabled', 'true');
+    }
+  };
 
-    socket.on('startQuiz', () => {
-        if (localStorage.getItem("username") != null) {
-            window.location.href = `/quiz/${quizId}`
-        }
-    })
+  socket.on('startQuiz', () => {
+    if (localStorage.getItem('username') != null) {
+      window.location.href = `/quiz/${quizId}`;
+    }
+  });
 
-    socket.on("nameExist", () => {
-        setErrorMsg("Name already exist!")
-        localStorage.removeItem("username")
-        if (btn.current) {
-            btn.current.removeAttribute("disabled")
-        }
-    })
+  socket.on('nameExist', () => {
+    setAlertMsg('Name already exist!');
+    localStorage.removeItem('username');
+    if (btn.current) {
+      btn.current.removeAttribute('disabled');
+    }
+  });
 
-    return (
+  return (
     <>
-    <div className="flex-1 w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100">
+      {alertMsg && <Alert error={alertMsg} onClose={() => setAlertMsg(null)} />}
+      <div className="flex-1 w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100">
         <div className="w-full max-w-md bg-white rounded-3xl shadow-lg border border-blue-100 p-8">
-            {errorMsg && <Alert error={errorMsg} onClose={() => setErrorMsg(null)} />}
+          <p className="text-center text-sm text-gray-500 mb-6">
+            Quiz ID:{' '}
+            <span className="font-semibold text-blue-700">{quizId}</span>
+          </p>
 
-            <p className="text-center text-sm text-gray-500 mb-6">
-            Quiz ID: <span className="font-semibold text-blue-700">{quizId}</span>
-            </p>
-
-            <h2 className="text-2xl font-extrabold text-blue-700 text-center mb-6">
+          <h2 className="text-2xl font-extrabold text-blue-700 text-center mb-6">
             Join the Quiz
-            </h2>
+          </h2>
 
-            <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center">
             <input
-                type="text"
-                placeholder="Enter your username"
-                onChange={(e) => (username.current = e.target.value)}
-                className="w-full border border-blue-200 rounded-lg px-4 py-3 mb-5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              type="text"
+              placeholder="Enter your username"
+              onChange={(e) => (username.current = e.target.value)}
+              className="w-full border border-blue-200 rounded-lg px-4 py-3 mb-5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             />
 
             <button
-                ref={btn}
-                onClick={readyUp}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all cursor-pointer"
+              ref={btn}
+              onClick={readyUp}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all cursor-pointer"
             >
-                Ready Up
+              Ready Up
             </button>
-            </div>
+          </div>
         </div>
-    </div>
+      </div>
     </>
-    )
+  );
 }
 
-export default App
+export default App;
