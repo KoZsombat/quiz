@@ -13,6 +13,8 @@ dotenv.config();
 
 const app = express();
 
+//rewrite endpoint names, socket array to sql (or idk), more files for readability, better auth
+
 const server = http.createServer(app);
 const port = process.env.PORT;
 

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Socket from '../scripts/useSocket.ts';
 
 function App() {
+  // check google/password login validity
   const apiUrl = import.meta.env.VITE_API_URL;
   const socket = Socket;
   const [alertMsg, setAlertMsg] = useState<string | null>(null);
