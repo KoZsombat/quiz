@@ -1,3 +1,4 @@
+import { authenticateToken } from './authMiddleware.js';
 import multer from "multer";
 import fs from "fs";
 import path from "path";
@@ -34,7 +35,7 @@ function fileHandler(app) {
     fileFilter,
   });
 
-  app.post("/api/upload", upload.single("image"), (req, res) => {
+  app.post("/api/images", authenticateToken, upload.single("image"), (req, res) => {
     if (!req.file) {
       return res
         .status(400)
@@ -46,8 +47,8 @@ function fileHandler(app) {
     });
   });
 
-  app.post("/api/delete", (req, res) => {
-    const { filename } = req.body;
+  app.delete("/api/images/:filename", authenticateToken, (req, res) => {
+    const { filename } = req.params;
     const filePath = path.join(__dirname, "../images", filename);
     fs.unlink(filePath, (err) => {
       if (err) {
@@ -57,7 +58,7 @@ function fileHandler(app) {
     });
   });
 
-  app.get("/api/files/:filename", (req, res) => {
+  app.get("/api/images/:filename", (req, res) => {
     const filename = req.params.filename;
     const filePath = path.join(__dirname, "../images", filename);
     res.sendFile(filePath, (err) => {
@@ -78,3 +79,4 @@ function fileHandler(app) {
 }
 
 export default fileHandler;
+

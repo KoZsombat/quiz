@@ -46,11 +46,15 @@ function App() {
 
   const fetchQuizzes = async () => {
     try {
-      const response = await fetch(`${apiUrl}/getQuizzes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ author: username }),
-      });
+      const response = await fetch(
+        `${apiUrl}/quizzes?author=${encodeURIComponent(username ?? '')}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
+          },
+        },
+      );
       const data = await response.json();
       if (data.success) {
         setQuizzes(data.quizzes);
@@ -65,9 +69,12 @@ function App() {
 
   const StartQuiz = async (title: string) => {
     try {
-      const response = await fetch(`${apiUrl}/startQuiz`, {
+      const response = await fetch(`${apiUrl}/sessions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
+        },
         body: JSON.stringify({ code: title }),
       });
       const data = await response.json();
@@ -206,3 +213,4 @@ function App() {
 }
 
 export default App;
+

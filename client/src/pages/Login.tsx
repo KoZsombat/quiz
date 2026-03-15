@@ -31,7 +31,7 @@ function App() {
     if (loginName && loginPass) {
       try {
         try {
-          const response = await fetch(`${apiUrl}/login`, {
+          const response = await fetch(`${apiUrl}/auth/login`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -41,6 +41,7 @@ function App() {
           const data = await response.json();
           if (data.success) {
             await storeUser(loginName);
+            localStorage.setItem('token', data.token);
             setAlertMsg('Successfully logged in!');
             setTimeout(() => (window.location.href = '/'), 500);
           } else {
@@ -75,7 +76,7 @@ function App() {
         email: registerEmail,
         password: registerPass,
       };
-      const response = await fetch(`${apiUrl}/register`, {
+      const response = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

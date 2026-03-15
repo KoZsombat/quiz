@@ -20,6 +20,14 @@ function emitJoinError(socket, io, msg = "joinError") {
   io.to(socket.id).emit(msg);
 }
 
+function getRoomIndex(roomList, roomId) {
+  return roomList.findIndex((room) => room.roomId === roomId);
+}
+
+function isHostSocket(room, socket) {
+  return room?.hostSocketId === socket.id;
+}
+
 export default function quizSocketHandler(io) {
   const roomList = [];
   const apiUrl = process.env.API_URL;
@@ -54,7 +62,6 @@ export default function quizSocketHandler(io) {
     });
 
     socket.on("adminCon", (data) => {
-      socket.join(data.quizId);
       if (!data.auth) {
         emitJoinError(socket, io);
         return;
@@ -62,7 +69,7 @@ export default function quizSocketHandler(io) {
       const verified = verifyToken(data.auth, socket, io);
       if (!verified) return;
       const { name } = verified;
-      let rIndex = roomList.findIndex((r) => r.roomId === data.quizId);
+      let rIndex = getRoomIndex(roomList, data.quizId);
       if (rIndex === -1) {
         roomList.push({
           roomId: data.quizId,
@@ -70,11 +77,14 @@ export default function quizSocketHandler(io) {
           globalIndex: 0,
           users: [],
           auth: name,
+          hostSocketId: socket.id,
         });
         rIndex = roomList.length - 1;
       } else if (roomList[rIndex].auth !== name) {
         emitJoinError(socket, io);
         return;
+      } else {
+        roomList[rIndex].hostSocketId = socket.id;
       }
       socket.join(data.quizId);
       io.to(data.quizId).emit("usersUpdate", {
@@ -107,15 +117,16 @@ export default function quizSocketHandler(io) {
     });
 
     socket.on("broadcastCon", (data) => {
-      const rIndex = roomList.findIndex((r) => r.roomId === data.roomId);
+      const rIndex = getRoomIndex(roomList, data.roomId);
       if (rIndex === -1) return;
-      if (roomList[rIndex].isStarted)
+      if (roomList[rIndex].isStarted) {
         socket.emit("broadcastSetIndex", roomList[rIndex].globalIndex);
+      }
       socket.join(data.roomId);
     });
 
     socket.on("userCon", (data) => {
-      const rIndex = roomList.findIndex((r) => r.roomId === data.roomId);
+      const rIndex = getRoomIndex(roomList, data.roomId);
       if (rIndex === -1) return;
       const verified = verifyToken(data.name, socket, io);
       if (!verified) return;
@@ -150,22 +161,23 @@ export default function quizSocketHandler(io) {
     });
 
     socket.on("startRoom", (roomId) => {
-      const rIndex = roomList.findIndex((r) => r.roomId === roomId);
+      const rIndex = getRoomIndex(roomList, roomId);
       if (rIndex === -1) return;
+      if (!isHostSocket(roomList[rIndex], socket)) {
+        emitJoinError(socket, io);
+        return;
+      }
+      roomList[rIndex].isStarted = true;
       io.to(roomId).emit("startQuiz");
       io.to(roomId).emit("scoreboardUpdate", roomList[rIndex].users);
     });
 
     socket.on("getQuiestions", async (roomId) => {
-      const rIndex = roomList.findIndex((r) => r.roomId === roomId);
+      const rIndex = getRoomIndex(roomList, roomId);
       if (rIndex === -1) return;
       socket.join(roomId);
-      const response = await fetch(`${apiUrl}/getQuiz/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code: roomId }),
+      const response = await fetch(`${apiUrl}/api/sessions/${roomId}/quiz`, {
+        method: "GET",
       });
       let data;
       try {
@@ -181,7 +193,7 @@ export default function quizSocketHandler(io) {
       const verified = verifyToken(data.username, socket, io);
       if (!verified) return;
       const { name } = verified;
-      const rIndex = roomList.findIndex((r) => r.roomId === data.roomId);
+      const rIndex = getRoomIndex(roomList, data.roomId);
       if (rIndex === -1) return;
       const uIndex = roomList[rIndex].users.findIndex(
         (u) => u.username === name,
@@ -195,20 +207,36 @@ export default function quizSocketHandler(io) {
     });
 
     socket.on("nextTrigger", (roomId) => {
-      const rIndex = roomList.findIndex((r) => r.roomId === roomId);
+      const rIndex = getRoomIndex(roomList, roomId);
       if (rIndex === -1) return;
+      if (!isHostSocket(roomList[rIndex], socket)) {
+        emitJoinError(socket, io);
+        return;
+      }
       roomList[rIndex].globalIndex += 1;
       io.to(roomId).emit("next", roomList[rIndex].globalIndex);
     });
 
     socket.on("endOfQuiz", (roomId) => {
-      const rIndex = roomList.findIndex((r) => r.roomId === roomId);
+      const rIndex = getRoomIndex(roomList, roomId);
       if (rIndex !== -1) {
+        if (!isHostSocket(roomList[rIndex], socket)) {
+          emitJoinError(socket, io);
+          return;
+        }
         roomList.splice(rIndex, 1);
       }
     });
 
     socket.on("disconnect", () => {
+      const hostRoomIndex = roomList.findIndex(
+        (room) => room.hostSocketId === socket.id,
+      );
+      if (hostRoomIndex !== -1) {
+        roomList.splice(hostRoomIndex, 1);
+        return;
+      }
+
       for (const room of roomList) {
         const userIndex = room.users.findIndex(
           (user) => user.userId === socket.id,

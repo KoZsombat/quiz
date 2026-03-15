@@ -8,13 +8,6 @@ function App() {
   const [loggedIn, setLoggedIn] = useState<boolean>(logged);
 
   useEffect(() => {
-    if (!logged || !username) {
-      window.location.href = '/';
-      return;
-    }
-  }, [logged, username]);
-
-  useEffect(() => {
     setLoggedIn(logged);
   }, [logged]);
 

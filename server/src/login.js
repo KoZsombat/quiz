@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { body, validationResult } from "express-validator";
 import { con } from "./db.js";
 
@@ -16,7 +17,7 @@ function loginHandler(app) {
   const saltRounds = 10;
 
   app.post(
-    "/api/register",
+    "/api/auth/register",
     [
       body("name")
         .trim()
@@ -72,7 +73,7 @@ function loginHandler(app) {
     },
   );
 
-  app.post("/api/login", async (req, res) => {
+  app.post("/api/auth/login", async (req, res) => {
     console.log("Login próbálkozás:", req.body);
     const { username, password } = req.body;
     const params = [username];
@@ -91,7 +92,8 @@ function loginHandler(app) {
 
       const isValid = await checkPassword(password, user.password);
       if (isValid) {
-        return res.json({ success: true });
+        const token = jwt.sign({ username: user.username }, process.env.JWT_SECRET, { expiresIn: '12h' });
+        return res.json({ success: true, token, username: user.username });
       } else {
         return res.json({ success: false });
       }

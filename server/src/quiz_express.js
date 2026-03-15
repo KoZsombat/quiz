@@ -1,8 +1,9 @@
+import { authenticateToken } from './authMiddleware.js';
 import { con } from "./db.js";
 import { randomBytes } from "crypto";
 
 function quizExpressHandler(app) {
-  app.post("/api/saveQuiz", async (req, res) => {
+  app.post("/api/quizzes", authenticateToken, async (req, res) => {
     const { array, code, author, visibility } = req.body;
     const isPublic = visibility === "public" ? 1 : 0;
 
@@ -46,8 +47,8 @@ function quizExpressHandler(app) {
     );
   });
 
-  app.post("/api/getQuizzes", (req, res) => {
-    const { author } = req.body;
+  app.get("/api/quizzes", authenticateToken, (req, res) => {
+    const { author } = req.query;
 
     if (!author) {
       return res.status(400).send("Invalid input");
@@ -72,8 +73,8 @@ function quizExpressHandler(app) {
     });
   });
 
-  app.post("/api/getUserData", (req, res) => {
-    const { username } = req.body;
+  app.get("/api/users/:username", authenticateToken, (req, res) => {
+    const { username } = req.params;
 
     if (!username) {
       return res.status(400).json({ success: false, message: "Invalid input" });
@@ -100,9 +101,9 @@ function quizExpressHandler(app) {
     });
   });
 
-  app.post("/api/isQuizCodeAvailable", (req, res) => {
-    const { code } = req.body;
-    if (!code) {
+  app.get("/api/sessions/:url/availability", (req, res) => {
+    const { url } = req.params;
+    if (!url) {
       return res.status(400).json({
         success: false,
         message: "Invalid input",
@@ -110,7 +111,7 @@ function quizExpressHandler(app) {
     }
 
     const query = "SELECT * FROM active WHERE q_url = ?";
-    con.query(query, [code], (err, results) => {
+    con.query(query, [url], (err, results) => {
       if (err) {
         return res.status(500).json({
           success: false,
@@ -125,7 +126,7 @@ function quizExpressHandler(app) {
     });
   });
 
-  app.post("/api/startQuiz", (req, res) => {
+  app.post("/api/sessions", authenticateToken, (req, res) => {
     const { code } = req.body;
 
     const url = randomBytes(3).toString("hex");
@@ -139,7 +140,7 @@ function quizExpressHandler(app) {
       if (err) {
         return res.status(500).send("Error retrieving quiz");
       }
-      if (results.length === 0) {
+      if (results.affectedRows === 0) {
         return res.status(404).send("Quiz not found");
       } else {
         return res.status(200).json({ success: true, url });
@@ -147,35 +148,59 @@ function quizExpressHandler(app) {
     });
   });
 
-  app.post("/api/endQuiz", (req, res) => {
-    const { url } = req.body;
+  app.delete("/api/sessions/:url", authenticateToken, (req, res) => {
+    const { url } = req.params;
 
     if (!url) {
       return res.status(400).send("Invalid input");
     }
 
-    const query = "DELETE FROM `active` WHERE q_url = ?";
-    con.query(query, [url], (err, results) => {
+    const activeQuery = "SELECT q_code FROM active WHERE q_url = ?";
+    con.query(activeQuery, [url], (activeErr, activeResults) => {
+      if (activeErr) {
+        return res.status(500).send("Error retrieving quiz");
+      }
+      if (activeResults.length === 0) {
+        return res.status(404).send("Quiz not found");
+      }
+
+      const ownershipQuery = "SELECT 1 FROM quizzes WHERE code = ? AND author = ? LIMIT 1";
+      con.query(
+        ownershipQuery,
+        [activeResults[0].q_code, req.user.username],
+        (ownerErr, ownerResults) => {
+          if (ownerErr) {
+            return res.status(500).send("Error retrieving quiz");
+          }
+          if (ownerResults.length === 0) {
+            return res.status(403).json({ success: false, message: "Forbidden" });
+          }
+
+          const deleteQuery = "DELETE FROM `active` WHERE q_url = ?";
+          con.query(deleteQuery, [url], (err, results) => {
       if (err) {
         return res.status(500).send("Error retrieving quiz");
       }
-      if (results.length === 0) {
+      if (results.affectedRows === 0) {
         return res.status(404).send("Quiz not found");
       } else {
         return res.status(200).json({ success: true });
       }
+          });
+        },
+      );
     });
   });
 
-  app.post("/api/getQuiz", (req, res) => {
-    const { code } = req.body;
+  app.get("/api/sessions/:url/quiz", (req, res) => {
+    const { url } = req.params;
 
-    if (!code) {
+    if (!url) {
       return res.status(400).send("Invalid input");
     }
 
     const query = "SELECT * FROM active WHERE q_url = ?";
-    con.query(query, [code], (err, results) => {
+    con.query(query, [url], (err, results) => {
       if (err) {
         return res.status(500).send("Error retrieving quiz");
       }
@@ -203,8 +228,8 @@ function quizExpressHandler(app) {
     });
   });
 
-  app.post("/api/getCode", (req, res) => {
-    const { url } = req.body;
+  app.get("/api/sessions/:url/code", (req, res) => {
+    const { url } = req.params;
 
     if (!url) {
       return res.status(400).send("Invalid input");
@@ -222,8 +247,9 @@ function quizExpressHandler(app) {
     });
   });
 
-  app.post("/api/getQuizForEdit", (req, res) => {
-    const { code, author } = req.body;
+  app.get("/api/quizzes/:code/edit", authenticateToken, (req, res) => {
+    const { code } = req.params;
+    const { author } = req.query;
 
     if (!code) {
       return res.status(400).send("Invalid input");
@@ -248,8 +274,9 @@ function quizExpressHandler(app) {
     });
   });
 
-  app.post("/api/updateQuiz", async (req, res) => {
-    const { array, code, author, visibility } = req.body;
+  app.patch("/api/quizzes/:code", authenticateToken, async (req, res) => {
+    const { code } = req.params;
+    const { array, author, visibility } = req.body;
     const isPublic = visibility === "public" ? 1 : 0;
     con.query(
       "DELETE FROM quizzes WHERE code = ? AND author = ?",
@@ -288,8 +315,9 @@ function quizExpressHandler(app) {
     );
   });
 
-  app.post("/api/updateUserData", (req, res) => {
-    const { oldUsername, newUsername, newEmail } = req.body;
+  app.patch("/api/users/:oldUsername", authenticateToken, (req, res) => {
+    const { oldUsername } = req.params;
+    const { newUsername, newEmail } = req.body;
     con.query(
       "UPDATE user SET username = ?, email = ? WHERE username = ?",
       [newUsername, newEmail, oldUsername],
@@ -305,17 +333,21 @@ function quizExpressHandler(app) {
     );
   });
 
-  app.post("/api/deleteQuiz", (req, res) => {
-    const { code, author } = req.body;
+  app.delete("/api/quizzes/:code", authenticateToken, (req, res) => {
+    const { code } = req.params;
+    const { author } = req.query;
     con.query(
       "DELETE FROM quizzes WHERE code = ? AND author = ?",
       [code, author],
       (err) => {
         if (err) return res.status(500).send("Error deleting quiz");
-        res.status(200).send("Quiz deleted successfully");
+        res
+          .status(200)
+          .json({ success: true, message: "Quiz deleted successfully" });
       },
     );
   });
 }
 
 export default quizExpressHandler;
+

@@ -1,13 +1,12 @@
 export const isRoomAvailable = async (quizId: string) => {
   try {
     const apiUrl = import.meta.env.VITE_API_URL;
-    const response = await fetch(`${apiUrl}/isQuizCodeAvailable`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${apiUrl}/sessions/${encodeURIComponent(quizId)}/availability`,
+      {
+        method: 'GET',
       },
-      body: JSON.stringify({ code: quizId }),
-    });
+    );
 
     if (!response.ok) {
       return false;
@@ -23,3 +22,4 @@ export const isRoomAvailable = async (quizId: string) => {
   }
   return true;
 };
+

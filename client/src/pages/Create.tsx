@@ -32,11 +32,15 @@ function App() {
 
   useEffect(() => {
     if (isEditMode && editCode) {
-      fetch(`${apiUrl}/getQuizForEdit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: editCode, author: username }),
-      })
+      fetch(
+        `${apiUrl}/quizzes/${encodeURIComponent(editCode)}/edit?author=${encodeURIComponent(username ?? '')}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
+          },
+        },
+      )
         .then(async (res) => {
           const data = await res.json();
           if (!data.success) {
@@ -70,11 +74,15 @@ function App() {
         ? idx
         : createdquietions.findIndex((q) => q.question === questionToDelete);
     const filename = `${code}_${index}`;
-    const response = await fetch(`${apiUrl}/delete`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename }),
-    });
+    const response = await fetch(
+      `${apiUrl}/images/${encodeURIComponent(filename)}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
+        },
+      },
+    );
     const data = await response.json();
     if (data.error) {
       setAlertMsg(`Failed to delete question image: ${data.error}`);
@@ -93,10 +101,11 @@ function App() {
       setAlertMsg('Please enter a room code.');
       return;
     }
-    fetch(`${apiUrl}/saveQuiz`, {
+    fetch(`${apiUrl}/quizzes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
       },
       body: JSON.stringify({
         array: createdquietions,
@@ -124,12 +133,14 @@ function App() {
       setAlertMsg('Please add at least one question before updating.');
       return;
     }
-    fetch(`${apiUrl}/updateQuiz`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    fetch(`${apiUrl}/quizzes/${encodeURIComponent(code)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
+      },
       body: JSON.stringify({
         array: createdquietions,
-        code: code,
         author: username,
         visibility: visibility,
       }),
@@ -282,8 +293,11 @@ function App() {
                       'image',
                       (e.target as HTMLFormElement).file.files[0],
                     );
-                    const response = await fetch(`${apiUrl}/upload`, {
+                    const response = await fetch(`${apiUrl}/images`, {
                       method: 'POST',
+                      headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
+                      },
                       body: formData,
                     });
 
@@ -466,3 +480,4 @@ function App() {
 }
 
 export default App;
+

@@ -30,11 +30,12 @@ function App() {
         setTimeout(() => (window.location.href = `/`), 2000);
       }
     });
-    const response = fetch(`${apiUrl}/getCode`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: quizId }),
-    });
+    const response = fetch(
+      `${apiUrl}/sessions/${encodeURIComponent(quizId ?? '')}/code`,
+      {
+        method: 'GET',
+      },
+    );
     response
       .then((res) => res.json())
       .then((data) => {
@@ -48,15 +49,21 @@ function App() {
       .catch((e) => {
         setAlertMsg('Error loading the quiz.' + e.message);
       });
-  }, []);
+  }, [apiUrl, quizId]);
 
   useEffect(() => {
     const jwt = localStorage.getItem('username');
     socket.emit('userCon', { roomId: quizId, name: jwt });
-    socket.on('tokenExpired', () => {
+    const handleTokenExpired = () => {
       window.location.href = `/`;
-    });
-  }, []);
+    };
+
+    socket.on('tokenExpired', handleTokenExpired);
+
+    return () => {
+      socket.off('tokenExpired', handleTokenExpired);
+    };
+  }, [quizId, socket]);
 
   const [questions, setQuestions] = useState<Question[]>([]);
 
@@ -73,68 +80,72 @@ function App() {
   useEffect(() => {
     if (timeLeft <= 0) return;
     const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          socket.emit('nextTrigger', quizId);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
     return () => clearInterval(interval);
-  }, [timeLeft, quizId]);
+  }, [timeLeft, quizId, socket]);
   useEffect(() => {
     optionRef.current = soption;
   }, [soption]);
 
   useEffect(() => {
     socket.emit('getQuiestions', quizId);
-  }, []);
+  }, [quizId, socket]);
 
-  socket.on('sendQuestions', (data) => {
-    if (
-      Array.isArray(data) &&
-      data.every((q) => q.question && q.options && q.answer)
-    ) {
-      setQuestions(data);
-      if (data.length > 0 && typeof data[0].timer === 'number') {
-        setTimeLeft(data[0].timer);
+  useEffect(() => {
+    const handleSendQuestions = (data: Question[]) => {
+      if (
+        Array.isArray(data) &&
+        data.every((q) => q.question && q.options && q.answer)
+      ) {
+        setQuestions(data);
+        if (data.length > 0 && typeof data[0].timer === 'number') {
+          setTimeLeft(data[0].timer);
+        }
+        return;
       }
-    } else {
-      fetch(`${apiUrl}/getQuiz`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: quizId }),
+
+      fetch(`${apiUrl}/sessions/${encodeURIComponent(quizId ?? '')}/quiz`, {
+        method: 'GET',
       })
         .then((res) => res.json())
-        .then((data) => {
-          if (data.success && Array.isArray(data.quiz)) {
-            setQuestions(data.quiz);
+        .then((responseData) => {
+          if (responseData.success && Array.isArray(responseData.quiz)) {
+            setQuestions(responseData.quiz);
             if (
-              data.quiz.length > 0 &&
-              typeof data.quiz[0].timer === 'number'
+              responseData.quiz.length > 0 &&
+              typeof responseData.quiz[0].timer === 'number'
             ) {
-              setTimeLeft(data.quiz[0].timer);
+              setTimeLeft(responseData.quiz[0].timer);
             }
           } else {
             setAlertMsg('No questions found for the quiz.');
           }
         })
         .catch(() => setAlertMsg('Failed to load questions.'));
-    }
-  });
+    };
+    const handleSetIndex = (data: number) => {
+      setIndex(data);
+    };
+    const handleJoinError = () => {
+      window.location.href = `/`;
+    };
+    const handleScoreboardUpdate = (data: Users[]) => {
+      setUserList(data);
+    };
 
-  socket.on('setIndex', (data: number) => {
-    setIndex(data);
-  });
+    socket.on('sendQuestions', handleSendQuestions);
+    socket.on('setIndex', handleSetIndex);
+    socket.on('joinError', handleJoinError);
+    socket.on('scoreboardUpdate', handleScoreboardUpdate);
 
-  socket.on('joinError', () => {
-    window.location.href = `/`;
-  });
-
-  socket.on('scoreboardUpdate', (data: Users[]) => {
-    setUserList(data);
-  });
+    return () => {
+      socket.off('sendQuestions', handleSendQuestions);
+      socket.off('setIndex', handleSetIndex);
+      socket.off('joinError', handleJoinError);
+      socket.off('scoreboardUpdate', handleScoreboardUpdate);
+    };
+  }, [apiUrl, quizId, socket]);
 
   useEffect(() => {
     const fetchImage = async () => {
@@ -145,7 +156,7 @@ function App() {
       const types = ['png', 'jpeg', 'jpg', 'gif'];
 
       for (const type of types) {
-        const imageUrl = `${apiUrl}/files/${codeOfQuiz}_${index}.${type}`;
+        const imageUrl = `${apiUrl}/images/${codeOfQuiz}_${index}.${type}`;
         try {
           const response = await fetch(imageUrl);
           if (response.ok) {
@@ -194,16 +205,6 @@ function App() {
       if (i === qs.length) {
         setShowScoreboard(true);
         localStorage.removeItem('username');
-        socket.emit('endOfQuiz', quizId);
-        try {
-          fetch(`${apiUrl}/endQuiz`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: quizId }),
-          });
-        } catch (e) {
-          console.error('Error fetching quizzes', e);
-        }
       } else {
         setIndex(index);
       }
@@ -213,7 +214,7 @@ function App() {
     return () => {
       socket.off('next', nextHandler);
     };
-  }, []);
+  }, [apiUrl, quizId, socket]);
 
   const handleOptionClick = (option: string) => {
     setOption(option);

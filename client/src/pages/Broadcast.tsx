@@ -16,11 +16,12 @@ function App({ showScoreboard = true }: BroadcastProps) {
 
   useEffect(() => {
     const apiUrl = import.meta.env.VITE_API_URL;
-    const response = fetch(`${apiUrl}/getCode`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: quizId }),
-    });
+    const response = fetch(
+      `${apiUrl}/sessions/${encodeURIComponent(quizId ?? '')}/code`,
+      {
+        method: 'GET',
+      },
+    );
     response
       .then((res) => res.json())
       .then((data) => {
@@ -44,19 +45,25 @@ function App({ showScoreboard = true }: BroadcastProps) {
         window.location.href = `/`;
       }
     });
-  }, []);
+  }, [quizId]);
 
   useEffect(() => {
     socket.emit('broadcastCon', { roomId: quizId });
-    socket.on('broadcastSetIndex', (index: number) => {
+    const handleBroadcastSetIndex = (index: number) => {
       setIsStarted(true);
       setIndex(index);
-    });
-  }, []);
+    };
+
+    socket.on('broadcastSetIndex', handleBroadcastSetIndex);
+
+    return () => {
+      socket.off('broadcastSetIndex', handleBroadcastSetIndex);
+    };
+  }, [quizId, socket]);
 
   useEffect(() => {
     socket.emit('getQuiestions', quizId);
-  }, []);
+  }, [quizId, socket]);
 
   useEffect(() => {
     questionsRef.current = questions;
@@ -66,7 +73,7 @@ function App({ showScoreboard = true }: BroadcastProps) {
     if (!codeOfQuiz || questions.length === 0) return;
     const fetchImage = async () => {
       const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${apiUrl}/files/${codeOfQuiz}_${index}`, {
+      const response = await fetch(`${apiUrl}/images/${codeOfQuiz}_${index}`, {
         method: 'GET',
       });
       if (response.ok) {
@@ -96,37 +103,41 @@ function App({ showScoreboard = true }: BroadcastProps) {
   useEffect(() => {
     if (timeLeft <= 0) return;
     const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          socket.emit('nextTrigger', quizId);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
     return () => clearInterval(interval);
-  }, [timeLeft, quizId]);
+  }, [timeLeft]);
 
   useEffect(() => {
     console.info('Questions updated:', questions);
   }, [questions]);
 
-  socket.on('sendQuestions', (data) => {
-    if (
-      Array.isArray(data) &&
-      data.every((q) => q.question && q.options && q.answer)
-    ) {
-      setQuestions(data);
-      if (data.length > 0 && typeof data[0].timer === 'number') {
-        setTimer(data[0].timer);
-        setTimeLeft(data[0].timer);
+  useEffect(() => {
+    const handleSendQuestions = (data: Question[]) => {
+      if (
+        Array.isArray(data) &&
+        data.every((q) => q.question && q.options && q.answer)
+      ) {
+        setQuestions(data);
+        if (data.length > 0 && typeof data[0].timer === 'number') {
+          setTimer(data[0].timer);
+          setTimeLeft(data[0].timer);
+        }
       }
-    }
-  });
+    };
 
-  socket.on('scoreboardUpdate', (data: Users[]) => {
-    setUserList(data);
-  });
+    const handleScoreboardUpdate = (data: Users[]) => {
+      setUserList(data);
+    };
+
+    socket.on('sendQuestions', handleSendQuestions);
+    socket.on('scoreboardUpdate', handleScoreboardUpdate);
+
+    return () => {
+      socket.off('sendQuestions', handleSendQuestions);
+      socket.off('scoreboardUpdate', handleScoreboardUpdate);
+    };
+  }, [socket]);
 
   useEffect(() => {
     const nextHandler = async (index: number) => {
@@ -156,7 +167,19 @@ function App({ showScoreboard = true }: BroadcastProps) {
     return () => {
       socket.off('next', nextHandler);
     };
-  }, []);
+  }, [socket]);
+
+  useEffect(() => {
+    const handleStartQuiz = () => {
+      setIsStarted(true);
+    };
+
+    socket.on('startQuiz', handleStartQuiz);
+
+    return () => {
+      socket.off('startQuiz', handleStartQuiz);
+    };
+  }, [socket]);
 
   if (questions.length === 0) {
     return (
@@ -189,10 +212,6 @@ function App({ showScoreboard = true }: BroadcastProps) {
       </>
     );
   }
-
-  socket.on('startQuiz', () => {
-    setIsStarted(true);
-  });
 
   if (isStarted === false) {
     return (

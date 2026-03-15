@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Alert from '../components/Alert.tsx';
 import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -24,15 +24,14 @@ function App() {
   const [userList, setUserList] = useState<Users[]>([]);
   const startBtn = useRef<HTMLButtonElement | null>(null);
 
-  const isRoomAvailable = async () => {
+  const isRoomAvailable = useCallback(async () => {
     try {
-      const response = await fetch(`${apiUrl}/isQuizCodeAvailable`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${apiUrl}/sessions/${encodeURIComponent(quizId ?? '')}/availability`,
+        {
+          method: 'GET',
         },
-        body: JSON.stringify({ code: quizId }),
-      });
+      );
 
       if (!response.ok) {
         setAlertMsg('Error checking room availability.');
@@ -50,57 +49,71 @@ function App() {
       console.error(err);
       setTimeout(() => (window.location.href = `/`), 2000);
     }
-  };
+  }, [apiUrl, quizId]);
 
   useEffect(() => {
     isRoomAvailable();
     setUserList([]);
-  }, []);
+  }, [isRoomAvailable]);
 
   useEffect(() => {
     socket.emit('adminCon', {
       quizId: quizId,
       auth: localStorage.getItem('user'),
     });
-    socket.on('tokenExpired', () => {
-      socket.emit('setAdminUserBack', { name: localStorage.getItem('user') });
-      socket.on('recieveAdminUsernameBack', (name: string) =>
-        localStorage.setItem('user', name),
-      );
-      socket.emit('setAdminUsername', { name: localStorage.getItem('user') });
-      socket.on('recieveAdminUsername', (data: string) =>
-        localStorage.setItem('user', data),
-      );
-      socket.emit('adminCon', {
-        quizId: quizId,
-        auth: localStorage.getItem('user'),
+    const handleTokenExpired = () => {
+      localStorage.removeItem('user');
+      window.location.href = `/`;
+    };
+
+    socket.on('tokenExpired', handleTokenExpired);
+
+    return () => {
+      socket.off('tokenExpired', handleTokenExpired);
+    };
+  }, [quizId, socket]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      fetch(`${apiUrl}/sessions/${encodeURIComponent(quizId ?? '')}`, {
+        method: 'DELETE',
+        keepalive: true,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
+        },
+      }).catch((e) => {
+        console.error('Error fetching quizzes', e);
       });
-    });
-  }, []);
+    };
 
-  window.addEventListener('beforeunload', async () => {
-    try {
-      fetch(`${apiUrl}/endQuiz`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: quizId }),
-      });
-    } catch (e) {
-      console.error('Error fetching quizzes', e);
-    }
-  });
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
-  socket.on('joinError', () => {
-    window.location.href = `/`;
-  });
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [apiUrl, quizId]);
 
-  socket.on('usersUpdate', (data) => {
-    setUsers(data.count);
-  });
+  useEffect(() => {
+    const handleJoinError = () => {
+      window.location.href = `/`;
+    };
+    const handleUsersUpdate = (data: { count: string }) => {
+      setUsers(data.count);
+    };
+    const handleScoreboardUpdate = (data: Users[]) => {
+      setUserList(data);
+    };
 
-  socket.on('scoreboardUpdate', (data) => {
-    setUserList(data);
-  });
+    socket.on('joinError', handleJoinError);
+    socket.on('usersUpdate', handleUsersUpdate);
+    socket.on('scoreboardUpdate', handleScoreboardUpdate);
+
+    return () => {
+      socket.off('joinError', handleJoinError);
+      socket.off('usersUpdate', handleUsersUpdate);
+      socket.off('scoreboardUpdate', handleScoreboardUpdate);
+    };
+  }, [socket]);
 
   const Start = () => {
     socket.emit('startRoom', quizId);
@@ -229,3 +242,4 @@ function App() {
 }
 
 export default App;
+

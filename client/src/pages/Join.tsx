@@ -18,13 +18,13 @@ function App() {
         setTimeout(() => (window.location.href = `/`), 2000);
       }
     });
-  }, []);
+  }, [quizId]);
 
   const readyUp = () => {
     setAlertMsg(null);
     if (username.current) {
       socket.emit('setUsername', { name: username.current });
-      socket.on('recieveUsername', (data: string) => {
+      socket.once('recieveUsername', (data: string) => {
         localStorage.setItem('username', data);
         socket.emit('joinRoom', { roomId: quizId, name: data });
       });
@@ -34,19 +34,29 @@ function App() {
     }
   };
 
-  socket.on('startQuiz', () => {
-    if (localStorage.getItem('username') != null) {
-      window.location.href = `/quiz/${quizId}`;
-    }
-  });
+  useEffect(() => {
+    const handleStartQuiz = () => {
+      if (localStorage.getItem('username') != null) {
+        window.location.href = `/quiz/${quizId}`;
+      }
+    };
 
-  socket.on('nameExist', () => {
-    setAlertMsg('Name already exist!');
-    localStorage.removeItem('username');
-    if (btn.current) {
-      btn.current.removeAttribute('disabled');
-    }
-  });
+    const handleNameExist = () => {
+      setAlertMsg('Name already exist!');
+      localStorage.removeItem('username');
+      if (btn.current) {
+        btn.current.removeAttribute('disabled');
+      }
+    };
+
+    socket.on('startQuiz', handleStartQuiz);
+    socket.on('nameExist', handleNameExist);
+
+    return () => {
+      socket.off('startQuiz', handleStartQuiz);
+      socket.off('nameExist', handleNameExist);
+    };
+  }, [quizId, socket]);
 
   return (
     <>

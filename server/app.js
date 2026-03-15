@@ -21,7 +21,7 @@ const port = process.env.PORT;
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PATCH", "DELETE"],
   }),
 );
 app.use(helmet());
@@ -30,7 +30,7 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 const io = new Server(server, {
   cors: {
     origin: process.env.CORS_ORIGIN,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PATCH", "DELETE"],
   },
 });
 
