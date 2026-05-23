@@ -143,7 +143,7 @@ function App() {
                   }
                 }}
               >
-                Boradcast Link 📋
+                Broadcast Link 📋
               </p>
               <p className="text-gray-500 font-medium flex items-center">
                 Join Code:{' '}

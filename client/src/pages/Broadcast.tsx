@@ -71,26 +71,38 @@ function App({ showScoreboard = true }: BroadcastProps) {
 
   useEffect(() => {
     if (!codeOfQuiz || questions.length === 0) return;
+    let objectUrl: string | null = null;
     const fetchImage = async () => {
       const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${apiUrl}/images/${codeOfQuiz}_${index}`, {
-        method: 'GET',
-      });
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        if (div.current) {
-          div.current.style.backgroundImage = `url(${url})`;
-          div.current.style.backgroundSize = 'cover';
-          div.current.style.backgroundPosition = 'center';
+      const types = ['png', 'jpeg', 'jpg', 'gif'];
+      for (const type of types) {
+        try {
+          const response = await fetch(
+            `${apiUrl}/images/${codeOfQuiz}_${index}.${type}`,
+            { method: 'GET' },
+          );
+          if (response.ok) {
+            const blob = await response.blob();
+            objectUrl = URL.createObjectURL(blob);
+            if (div.current) {
+              div.current.style.backgroundImage = `url(${objectUrl})`;
+              div.current.style.backgroundSize = 'cover';
+              div.current.style.backgroundPosition = 'center';
+            }
+            return;
+          }
+        } catch {
+          // try next extension
         }
-      } else {
-        if (div.current) {
-          div.current.style.backgroundImage = `none`;
-        }
+      }
+      if (div.current) {
+        div.current.style.backgroundImage = 'none';
       }
     };
     fetchImage();
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
   }, [codeOfQuiz, index, questions]);
 
   useEffect(() => {
@@ -107,10 +119,6 @@ function App({ showScoreboard = true }: BroadcastProps) {
     }, 1000);
     return () => clearInterval(interval);
   }, [timeLeft]);
-
-  useEffect(() => {
-    console.info('Questions updated:', questions);
-  }, [questions]);
 
   useEffect(() => {
     const handleSendQuestions = (data: Question[]) => {
@@ -246,7 +254,7 @@ function App({ showScoreboard = true }: BroadcastProps) {
                   <button
                     key={i}
                     ref={isCorrect ? correct : null}
-                    className={`p-5 rounded-xl text-lg font-semibold shadow-sm border transition-all duration-200 bg-blue-50 border-blue-200 text-blue-800'`}
+                    className={`p-5 rounded-xl text-lg font-semibold shadow-sm border transition-all duration-200 bg-blue-50 border-blue-200 text-blue-800`}
                   >
                     {option}
                   </button>
@@ -276,7 +284,7 @@ function App({ showScoreboard = true }: BroadcastProps) {
                 <button
                   key={i}
                   ref={isCorrect ? correct : null}
-                  className={`p-5 rounded-xl text-lg font-semibold shadow-sm border transition-all duration-200 bg-blue-50 border-blue-200 text-blue-800'`}
+                  className={`p-5 rounded-xl text-lg font-semibold shadow-sm border transition-all duration-200 bg-blue-50 border-blue-200 text-blue-800`}
                 >
                   {option}
                 </button>

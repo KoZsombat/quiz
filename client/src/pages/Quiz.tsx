@@ -148,30 +148,33 @@ function App() {
   }, [apiUrl, quizId, socket]);
 
   useEffect(() => {
+    if (!codeOfQuiz) return;
+
+    let currentUrl: string | null = null;
+
     const fetchImage = async () => {
-      if (!codeOfQuiz) return;
-
       setImageUrl(null);
-
       const types = ['png', 'jpeg', 'jpg', 'gif'];
-
       for (const type of types) {
-        const imageUrl = `${apiUrl}/images/${codeOfQuiz}_${index}.${type}`;
+        const url = `${apiUrl}/images/${codeOfQuiz}_${index}.${type}`;
         try {
-          const response = await fetch(imageUrl);
+          const response = await fetch(url);
           if (response.ok) {
             const blob = await response.blob();
-            const objectURL = URL.createObjectURL(blob);
-            setImageUrl(objectURL);
-            return () => URL.revokeObjectURL(objectURL);
+            currentUrl = URL.createObjectURL(blob);
+            setImageUrl(currentUrl);
+            return;
           }
         } catch (error) {
-          console.error(`Error fetching image ${imageUrl}:`, error);
+          console.error(`Error fetching image ${url}:`, error);
         }
       }
     };
 
     fetchImage();
+    return () => {
+      if (currentUrl) URL.revokeObjectURL(currentUrl);
+    };
   }, [codeOfQuiz, index, apiUrl]);
 
   useEffect(() => {
@@ -282,11 +285,13 @@ function App() {
                     key={i}
                     ref={isCorrect ? correct : null}
                     onClick={() => handleOptionClick(option)}
-                    className={`p-5 rounded-xl text-lg font-semibold shadow-sm border transition-all duration-200 cursor-pointer w-full
+                    disabled={timeLeft === 0}
+                    className={`p-5 rounded-xl text-lg font-semibold shadow-sm border transition-all duration-200 w-full
+                    disabled:cursor-not-allowed disabled:opacity-60
                     ${
                       isSelected
-                        ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-700'
-                        : 'bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-800'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-700 cursor-pointer'
+                        : 'bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-800 cursor-pointer'
                     }`}
                   >
                     {option}

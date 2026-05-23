@@ -268,6 +268,7 @@ function quizExpressHandler(app) {
           timer: row.timer,
           options: JSON.parse(row.options),
           answer: row.answer,
+          visibility: row.isPublic ? 'public' : 'private',
         }));
         return res.status(200).json({ success: true, quiz });
       }

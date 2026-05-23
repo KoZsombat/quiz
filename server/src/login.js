@@ -31,7 +31,7 @@ function loginHandler(app) {
         .normalizeEmail(),
       body("password")
         .isLength({ min: 8 })
-        .withMessage("A jelszó legalább 6 karakter legyen."),
+        .withMessage("A jelszó legalább 8 karakter legyen."),
     ],
     async (req, res) => {
       const errors = validationResult(req);

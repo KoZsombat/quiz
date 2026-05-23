@@ -174,7 +174,7 @@ function App() {
                         value={usernameInput}
                         onChange={(e) => setUsernameInput(e.target.value)}
                       />
-                      <button className="bg-white border border-sky-200 text-sky-800 hover:bg-sky-50 px-4 py-2 rounded-lg transition font-semibold">
+                      <button onClick={savePersonalData} className="bg-white border border-sky-200 text-sky-800 hover:bg-sky-50 px-4 py-2 rounded-lg transition font-semibold">
                         Save
                       </button>
                     </div>
@@ -190,7 +190,7 @@ function App() {
                         value={emailInput}
                         onChange={(e) => setEmailInput(e.target.value)}
                       />
-                      <button className="bg-white border border-sky-200 text-sky-800 hover:bg-sky-50 px-4 py-2 rounded-lg transition font-semibold">
+                      <button onClick={savePersonalData} className="bg-white border border-sky-200 text-sky-800 hover:bg-sky-50 px-4 py-2 rounded-lg transition font-semibold">
                         Save
                       </button>
                     </div>

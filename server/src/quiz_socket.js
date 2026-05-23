@@ -131,10 +131,10 @@ export default function quizSocketHandler(io) {
       const verified = verifyToken(data.name, socket, io);
       if (!verified) return;
       const { name } = verified;
-      const alreadyInRoom = roomList[rIndex].users.some(
+      const existingUser = roomList[rIndex].users.find(
         (u) => u.username === name,
       );
-      if (!alreadyInRoom) {
+      if (!existingUser) {
         const user = {
           roomId: data.roomId,
           userId: socket.id,
@@ -144,7 +144,8 @@ export default function quizSocketHandler(io) {
         roomList[rIndex].users.push(user);
         socket.join(data.roomId);
       } else {
-        emitJoinError(socket, io);
+        existingUser.userId = socket.id;
+        socket.join(data.roomId);
       }
       io.to(data.roomId).emit("usersUpdate", {
         count: roomList[rIndex].users.length,
