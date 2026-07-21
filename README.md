@@ -4,245 +4,64 @@
 [![Backend](https://img.shields.io/badge/backend-Express%205%20%2B%20MySQL-3c873a?style=flat-square)](server)
 [![Realtime](https://img.shields.io/badge/realtime-Socket.IO-010101?style=flat-square)](server/src/quiz_socket.js)
 
-Full-stack real-time quiz application where hosts can create quizzes, start live sessions, and players can join and answer questions with a live scoreboard.
+A live quiz app in the Kahoot mould. Write a quiz, start a session, and share the link — players join on their own devices, answer against a countdown, and watch the scoreboard shuffle after every question.
 
-## At a Glance
+## What it does
 
-| Area     | Details                                                    |
-| -------- | ---------------------------------------------------------- |
-| Frontend | React 19, TypeScript, Vite, Tailwind CSS 4                 |
-| Backend  | Express 5, MySQL/MariaDB, Socket.IO                        |
-| Realtime | Room-based quiz sessions, live user count, live scoreboard |
-| Auth     | Register/login with bcrypt, token-based socket identity    |
-| Media    | Optional image upload for quiz questions                   |
+- Lets you build quizzes with as many questions as you like, each with its own options, correct answer, per-question timer, and an optional image
+- Marks quizzes public or private, so you choose whether they show up for everyone
+- Runs sessions in Socket.IO rooms: a host screen to drive the quiz, a broadcast screen for the projector, and a join page for players
+- Shows the live player count while people are joining and a live scoreboard once the questions start
+- Gives you a dashboard of the quizzes you've written, to edit or delete
+- Signs you up and in with bcrypt-hashed passwords and JWT
 
-## Highlights
+Each session gets its own generated join URL, so the same quiz can be run again later without the old link still working.
 
-- Quiz creation with multiple questions, options, timer, and correct answer
-- Public/private quiz visibility
-- Real-time host/admin/broadcast/player flow with Socket.IO rooms
-- Live scoreboard updates during gameplay
-- User registration and login
-- Quiz dashboard for listing, editing, and deleting authored quizzes
-- Image upload and file serving for quiz content
+## Running it locally
 
-## Tech Stack
-
-| Frontend           | Backend                                  |
-| ------------------ | ---------------------------------------- |
-| React 19           | Express 5                                |
-| TypeScript 5       | MySQL via mysql2                         |
-| Vite 7             | Socket.IO 4                              |
-| Tailwind CSS 4     | bcrypt, helmet, cors, express-rate-limit |
-| react-router-dom 7 | express-validator, multer, jsonwebtoken  |
-
-## Requirements
-
-- Node.js 20+
-- npm
-- MySQL 8+ or MariaDB 10+
-
-## Quick Start
+You'll need Node 20+ and MySQL 8 or MariaDB 10+.
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/KoZsombat/quiz
 cd quiz
 
-cd client
-npm install
-cd ../server
-npm install
+# install both sides
+cd client && npm install
+cd ../server && npm install
 
-# import database schema
-mysql -u root -p < quiz.sql
+# create the database, then import the schema
+cd ..
+mysql -u root -p -e "CREATE DATABASE quiz"
+mysql -u root -p quiz < server/quiz.sql
 ```
 
-Create environment files (see Setup), then run backend and frontend.
-
-## Setup
-
-### 1. Clone the repository
+Both halves ship an annotated `.env.example`, so copy each one and fill it in:
 
 ```bash
-git clone <repo-url>
-cd quiz
+cp server/.env.example server/.env
+cp client/.env.example client/.env
 ```
 
-### 2. Install dependencies
+On the server side the ones that matter are your MySQL connection (`DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`), a long random `JWT_SECRET`, and `CORS_ORIGIN` pointing at the frontend. On the client side, `VITE_API_URL` and `VITE_SOCKET_URL` point at the backend — the defaults already line up if you leave the server on port 3000.
+
+Start both and open the app:
 
 ```bash
-cd client
-npm install
-cd ../server
-npm install
-```
+# in server/
+npm start
 
-### 3. Create database and import schema
-
-Create a database (example name: `quiz`) and import:
-
-```bash
-mysql -u root -p < server/quiz.sql
-```
-
-### 4. Create environment files
-
-Create `server/.env`:
-
-```env
-PORT=3001
-CORS_ORIGIN=http://localhost:5173
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=quiz
-JWT_SECRET=replace_with_a_long_random_secret
-API_URL=http://localhost:3001/api
-```
-
-Create `client/.env`:
-
-```env
-VITE_API_URL=http://localhost:3001/api
-VITE_SOCKET_URL=http://localhost:3001
-VITE_URL=http://localhost:5173
-VITE_GITHUB_URL=https://github.com/<your-profile>
-```
-
-### 5. Start backend
-
-From the `server` folder:
-
-```bash
-node app.js
-```
-
-### 6. Start frontend
-
-From the `client` folder:
-
-```bash
+# in client/
 npm run dev
 ```
 
-### 7. Open the app
+The frontend runs at `http://localhost:5173`.
 
-`http://localhost:5173`
+## Under the hood
 
-## Scripts
+React 19 + TypeScript with Vite and Tailwind CSS 4 on the front, Express 5 + MySQL on the back, and Socket.IO carrying everything that happens during a live round. Auth is bcrypt plus JWT, with helmet, CORS and rate limiting in front of the API, and question images are uploaded through multer and served back from `server/images`.
 
-### Client
-
-| Command           | Description                       |
-| ----------------- | --------------------------------- |
-| `npm run dev`     | Start Vite development server     |
-| `npm run build`   | Type-check and build frontend     |
-| `npm run preview` | Preview production build          |
-| `npm run lint`    | Run ESLint                        |
-| `npm run format`  | Format source files with Prettier |
-
-### Server
-
-| Command          | Description                               |
-| ---------------- | ----------------------------------------- |
-| `npm start`      | Starts Node using configured entry script |
-| `npm run eslint` | Run ESLint                                |
-| `npm run format` | Format server files with Prettier         |
-
-## Runtime Notes
-
-- Backend listens on `PORT`.
-- Frontend reads API base URL from `VITE_API_URL`.
-- Socket client connects through `VITE_SOCKET_URL`.
-- CORS is restricted to `CORS_ORIGIN`.
-
-## API Overview
-
-Base URL: `/api`
-
-### Auth
-
-| Method | Path        | Description                      |
-| ------ | ----------- | -------------------------------- |
-| `POST` | `/register` | Register a new user              |
-| `POST` | `/login`    | Login with username and password |
-
-### Quiz Management
-
-| Method | Path                   | Description                                |
-| ------ | ---------------------- | ------------------------------------------ |
-| `POST` | `/saveQuiz`            | Save a new quiz                            |
-| `POST` | `/getQuizzes`          | Get public quizzes and own quizzes         |
-| `POST` | `/getQuizForEdit`      | Load an authored quiz for editing          |
-| `POST` | `/updateQuiz`          | Update an authored quiz                    |
-| `POST` | `/deleteQuiz`          | Delete an authored quiz                    |
-| `POST` | `/startQuiz`           | Start a quiz session and create share URL  |
-| `POST` | `/endQuiz`             | End quiz session                           |
-| `POST` | `/getQuiz`             | Get quiz questions from active session URL |
-| `POST` | `/getCode`             | Resolve active URL to original quiz code   |
-| `POST` | `/isQuizCodeAvailable` | Check whether a session URL is active      |
-
-### User
-
-| Method | Path              | Description           |
-| ------ | ----------------- | --------------------- |
-| `POST` | `/getUserData`    | Fetch username/email  |
-| `POST` | `/updateUserData` | Update username/email |
-
-### Files
-
-| Method | Path               | Description                   |
-| ------ | ------------------ | ----------------------------- |
-| `POST` | `/upload`          | Upload image for quiz content |
-| `POST` | `/delete`          | Delete uploaded image         |
-| `GET`  | `/files/:filename` | Serve uploaded image          |
-
-## Socket Events (Core)
-
-- `adminCon`, `verifyAdmin`, `setAdminUsername`
-- `joinRoom`, `userCon`, `broadcastCon`
-- `startRoom`, `getQuiestions`, `nextTrigger`, `endOfQuiz`
-- `correctAns`, `scoreboardUpdate`, `usersUpdate`
-
-## Database
-
-The schema is in `server/quiz.sql`.
-
-Main tables:
-
-- `user`: registered users
-- `quizzes`: quiz questions grouped by quiz code
-- `active`: active quiz sessions and generated join URLs
-
-## Project Structure
-
-```text
-quiz/
-|- client/
-|  |- src/
-|  |  |- components/      # UI components (alerts, scoreboard)
-|  |  |- pages/           # Route pages (home, login, create, host, quiz, etc.)
-|  |  |- scripts/         # Socket + session helper hooks
-|  |  `- types/           # Shared frontend types
-|  `- vite.config.ts
-|- server/
-|  |- src/
-|  |  |- db.js            # Database connection
-|  |  |- login.js         # Auth endpoints
-|  |  |- quiz_express.js  # Quiz REST endpoints
-|  |  |- quiz_socket.js   # Socket.IO live quiz logic
-|  |  `- file.js          # Image upload/file endpoints
-|  |- images/             # Uploaded quiz images
-|  |- quiz.sql            # Database schema
-|  `- app.js              # Express + Socket.IO entry
-`- README.md
-```
-
-## Notes
-
-- No automated test suite is configured yet.
-- The server package `start` script may require aligning with the actual entry file if you prefer `npm start` over `node app.js`.
+The REST endpoints live in `server/src/quiz_express.js`, the live-game logic in `server/src/quiz_socket.js`, and the schema in `server/quiz.sql`. On the client, `src/pages` holds one file per screen and `src/scripts` holds the socket and session hooks.
 
 ## License
 
-Provided as-is for learning and portfolio purposes.
+Built as a portfolio project, provided as-is.
